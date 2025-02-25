@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/dashboard-layout";
 import HeroSection from "@/components/hero-section";
 import BlockStreamVisualization from "@/components/block-stream-visualization";
 import TransactionComparison from "@/components/transaction-comparison";
+import EthereumTransactionBatching from "@/components/visualization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBlockStore } from "@/lib/store";
 
@@ -23,19 +24,23 @@ export default function Home() {
   
   return (
     <DashboardLayout>
-      {/* Hero Section */}
-      <HeroSection />
-      
-      {/* Block Stream Visualization */}
-      <div className="mt-8">
+      {/* Block Stream Visualization - Moved to top */}
+      <div className="mb-8">
         <BlockStreamVisualization />
       </div>
       
-      {/* Transaction Comparison */}
-      <TransactionComparison />
+      {/* Transaction Comparison - Moved to second position */}
+      <div className="mb-8">
+        <TransactionComparison />
+      </div>
+      
+      {/* Hero Section - Moved down */}
+      <div className="mb-8 bg-white border border-neutral-200 shadow-sm p-6 rounded-lg">
+        <HeroSection />
+      </div>
       
       {/* Overview Stats */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="bg-white border border-neutral-200 shadow-sm hover:shadow-md transition-all rounded-lg">
           <CardHeader>
             <CardTitle className="text-lg text-neutral-800">Recent Activity</CardTitle>
@@ -113,6 +118,14 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Ethereum Transaction Batching Visualization - Added to bottom */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Transaction Batching Visualization</h2>
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-lg shadow-xl overflow-hidden">
+          <EthereumTransactionBatching />
+        </div>
       </div>
     </DashboardLayout>
   );
