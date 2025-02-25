@@ -3,8 +3,156 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 198 86% 59%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 186 88% 95%;
+  --secondary-foreground: 186 88% 37%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 157 83% 96%;
+  --accent-foreground: 157 83% 30%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 198 86% 59%;
+
+  --primary-blue: 198 86% 59%;
+  --primary-green: 157 75% 50%;
+  --primary-purple: 260 75% 65%;
+  --primary-yellow: 40 96% 65%;
+  --primary-teal: 174 80% 50%;
+  --gradient-start: 157 75% 50%;
+  --gradient-end: 198 86% 59%;
+  
+  --radius: 0.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-sky-50 via-white to-blue-50 text-slate-900 min-h-screen;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(240, 240, 240, 0.7);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white bg-opacity-60 backdrop-blur-md border border-white/60 shadow-sm;
+  }
+  
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-slate-200 shadow-sm;
+  }
+  
+  .glass-button {
+    @apply bg-white/70 hover:bg-white/90 border border-slate-200 text-slate-700 shadow-sm backdrop-blur-sm transition-all;
+  }
+
+  .hover-scale {
+    @apply hover:scale-[1.02] transition-transform duration-200;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+  }
+  
+  .sidebar {
+    @apply h-screen w-64 border-r border-slate-200 bg-white fixed top-0 left-0 z-40 transition-all duration-300 ease-in-out;
+  }
+  
+  .sidebar-collapsed {
+    @apply w-16;
+  }
+  
+  .sidebar-item {
+    @apply flex items-center px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-md my-1 transition-colors;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-blue-50 text-blue-600 font-medium;
+  }
+  
+  .main-content {
+    @apply ml-64 transition-all duration-300 ease-in-out;
+  }
+  
+  .main-content-expanded {
+    @apply ml-16;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,6 +164,5 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }

@@ -1,0 +1,123 @@
+import { create } from 'zustand';
+import { BlockBatch } from '@/types/block';
+import { Transaction } from '@/types/transaction';
+
+// Generate a new block with random transactions
+const generateNewBlock = (): BlockBatch => {
+  const blockNumber = Math.floor(17000000 + Math.random() * 1000);
+  const txCount = Math.floor(Math.random() * 100) + 30;
+  const sequentialCount = Math.floor(txCount * (Math.random() * 0.3));
+  const isSequential = Math.random() > 0.8; // 20% chance of sequential block
+  
+  return {
+    id: `#${blockNumber}`,
+    transactions: txCount,
+    totalFees: (Math.random() * 0.5 + 0.1).toFixed(3),
+    expectedMEV: (Math.random() * 0.3 + 0.05).toFixed(3),
+    isSequential,
+    sequentialCount: isSequential ? txCount : sequentialCount,
+    timestamp: new Date().toISOString()
+  };
+};
+
+// Generate random transactions for a block
+const generateTransactionsForBlock = (count: number): Transaction[] => {
+  const addresses = [
+    "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+    "0x8Ba1f109551bD432803012645Ac136ddd64DBA72",
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8",
+    "0x5d38b4e4783e34e2301a2a36c39a03c45798c4dd"
+  ];
+  
+  return Array(count).fill(null).map((_, i) => {
+    const isParallelizable = Math.random() > 0.3;
+    
+    return {
+      id: `0x${Math.random().toString(16).substring(2, 10)}`,
+      from: addresses[Math.floor(Math.random() * addresses.length)],
+      to: addresses[Math.floor(Math.random() * addresses.length)],
+      value: (Math.random() * 0.5).toFixed(4),
+      gasUsed: (Math.random() * 100000).toFixed(0),
+      timestamp: new Date().toISOString(),
+      isParallelizable,
+      blockId: null // Will be set when added to a block
+    };
+  });
+};
+
+// Generate initial blocks
+const generateInitialBlocks = (count: number = 10): BlockBatch[] => {
+  return Array(count).fill(null).map(() => generateNewBlock());
+};
+
+interface BlockStore {
+  blocks: BlockBatch[];
+  currentTransactions: Transaction[];
+  isSimulating: boolean;
+  simulationInterval: number | null;
+  
+  // Actions
+  addNewBlock: () => void;
+  startSimulation: (intervalMs: number) => void;
+  stopSimulation: () => void;
+  resetBlocks: () => void;
+}
+
+export const useBlockStore = create<BlockStore>((set, get) => ({
+  blocks: generateInitialBlocks(),
+  currentTransactions: generateTransactionsForBlock(15),
+  isSimulating: false,
+  simulationInterval: null,
+  
+  addNewBlock: () => {
+    const newBlock = generateNewBlock();
+    const newTransactions = generateTransactionsForBlock(newBlock.transactions);
+    
+    // Assign block ID to transactions
+    newTransactions.forEach(tx => {
+      tx.blockId = newBlock.id;
+    });
+    
+    set(state => ({
+      blocks: [newBlock, ...state.blocks.slice(0, 9)], // Keep only the 10 most recent blocks
+      currentTransactions: newTransactions
+    }));
+  },
+  
+  startSimulation: (intervalMs: number = 10000) => {
+    // Clear any existing interval
+    if (get().simulationInterval) {
+      clearInterval(get().simulationInterval);
+    }
+    
+    // Create new interval
+    const interval = setInterval(() => {
+      get().addNewBlock();
+    }, intervalMs) as unknown as number;
+    
+    set({
+      isSimulating: true,
+      simulationInterval: interval
+    });
+  },
+  
+  stopSimulation: () => {
+    const { simulationInterval } = get();
+    if (simulationInterval) {
+      clearInterval(simulationInterval);
+    }
+    
+    set({
+      isSimulating: false,
+      simulationInterval: null
+    });
+  },
+  
+  resetBlocks: () => {
+    set({
+      blocks: generateInitialBlocks(),
+      currentTransactions: generateTransactionsForBlock(15)
+    });
+  }
+})); 
