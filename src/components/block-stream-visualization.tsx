@@ -107,10 +107,7 @@ const BlockStreamVisualization = ({
       </CardHeader>
       
       <CardContent className="p-6">
-        <div 
-          className="flex items-stretch gap-4 overflow-x-auto pb-4 hide-scrollbar"
-          ref={scrollContainerRef}
-        >
+        <div className="flex items-stretch gap-4 overflow-x-auto pb-4 hide-scrollbar">
           <AnimatePresence mode="popLayout">
             {blocks.map((block, index) => (
               <motion.div
@@ -124,7 +121,6 @@ const BlockStreamVisualization = ({
                     ? "bg-purple-900/20 border-purple-700" 
                     : "bg-zinc-800/50 border-zinc-700"
                 }`}
-                onClick={() => handleBlockClick(block)}
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`font-medium ${index === 0 ? "text-purple-300" : "text-zinc-300"}`}>
@@ -162,7 +158,7 @@ const BlockStreamVisualization = ({
                     <div className="flex justify-between">
                       <span className="text-zinc-400">Parallel Txs</span>
                       <span className={index === 0 ? "text-purple-300" : "text-zinc-300"}>
-                        {block.transactions - (block.sequentialCount || 0)} of {block.transactions}
+                        {block.sequentialCount} of {block.transactions}
                       </span>
                     </div>
                   )}
