@@ -3,7 +3,7 @@
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
 ## Table of Contents
-- [Introduction](#introduction)
+<!-- - [Introduction](#introduction)
 - [Implementation Overview](#implementation-overview)
   - [1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain](#1-implementing-our-custom-algorithm-through-an-alternative-layer-1-alt-l1-implementation----eigenchain)
   - [2. Custom Client Implementation](#2-custom-client-implementation)
@@ -20,7 +20,7 @@
 - [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
 - [Performance Improvements](#performance-improvements)
   - [Performance Monitoring](#performance-monitoring)
-- [Future Research Directions](#future-research-directions)
+- [Future Research Directions](#future-research-directions) -->
 
 
 ## Introduction
