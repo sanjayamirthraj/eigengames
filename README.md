@@ -259,35 +259,6 @@ Our parallel transaction pool delivers some significant performance improvements
 3. **Better Resource Usage**: Modern multi-core systems can efficiently distribute computational resources across concurrent transaction execution
 4. **Economic Efficiency**: Gas price prioritization ensures block space goes to the transactions with the highest economic value
 
-## Visualization of Parallel vs. Sequential Processing
-
-We built an interactive 3D visualization that shows the performance difference between sequential and parallel transaction processing. It helps users see the benefits of parallel execution through a clear, animated comparison.
-
-### Key Visualization Features
-
-1. **Transaction Positioning**: Transactions appear as blocks being processed inside larger blockchain blocks. The visualization clearly shows:
-   - Sequential transactions entering one at a time into a blockchain block
-   - Batch/parallel transactions being grouped and processed together in optimized batches
-
-2. **Visual Cues and Animation Effects**:
-   - Smooth path animations show transactions following a curved trajectory into blocks
-   - Easing functions create natural motion as transactions are processed
-   - Highlight effects pulse when transactions enter blocks, providing visual feedback
-   - Color coding helps distinguish between sequential and parallel processing modes
-
-3. **Camera Movements**:
-   - Dynamic camera angles follow the action, focusing on key parts of the process
-   - Transitions between processing stages help users follow the complete workflow
-
-4. **Performance Metrics Display**:
-   - Real-time counters show transactions processed
-   - Timer displays compare the speed difference between sequential and parallel methods
-   - Final statistics highlight the efficiency gains from parallel processing
-
-This visualization works as both an educational tool and a demonstration of how much faster parallel transaction processing can be.
-
-## Performance Monitoring
-
 We added comprehensive metrics instrumentation so you can monitor how the parallel pool is performing:
 
 - Transaction throughput and queue depth monitoring
@@ -339,11 +310,3 @@ There are several areas we'd like to explore further:
 5. **Statistical Modeling**: Data-driven approaches to predict which transactions are likely to be parallelizable
 6. **Client-side Integration**: Simplified APIs for wallets and applications to leverage parallel transaction processing
 7. **EigenLayer-specific Optimizations**: Specialized mechanisms for AVS coordination and restaking-aware execution
-
-## Conclusion
-
-Our enhanced parallel transaction pool represents a significant advancement in blockchain transaction processing architecture. By applying principles from concurrent computing to EigenLayer AVS transaction handling, this implementation substantially improves performance while maintaining security and consistency guarantees.
-
-The dual implementation approach (Alt-L1 or Custom Client with EIP) provides flexibility in deployment strategy, allowing for either complete blockchain redesign or incremental adoption through existing ecosystems. In both cases, our solution for batching transactions from the mempool based on independent state accesses creates a powerful system for maximizing transaction throughput on multi-core systems.
-
-This technology contributes to blockchain scalability, providing an important mechanism for increasing transaction throughput to meet growing network demand, particularly within the EigenLayer ecosystem.
