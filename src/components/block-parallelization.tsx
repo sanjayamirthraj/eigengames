@@ -40,9 +40,9 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold gradient-text">Most Optimal Parallelizable Block Options</h2>
+        <h2 className="text-2xl font-bold text-white">Most Optimal Parallelizable Block Options</h2>
         <Button 
-          className="glass-button hover-scale"
+          variant="outline"
           onClick={handleRefresh}
           aria-label="Refresh block options"
         >
@@ -60,31 +60,31 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
         {blocks.map((block, index) => (
           <div 
             key={block.id}
-            className={`glass-panel p-6 rounded-xl hover-scale transition-all ${
-              selectedBlockIndex === index ? "shadow-lg border-blue-200" : ""
+            className={`bg-zinc-900 border border-zinc-800 p-6 rounded-xl transition-all ${
+              selectedBlockIndex === index ? "shadow-lg border-purple-600" : ""
             }`}
             onClick={() => setSelectedBlockIndex(index)}
           >
             {/* Visual representation of block structure */}
-            <div className="border border-gray-200 rounded-lg p-4 mb-4">
+            <div className="border border-zinc-800 rounded-lg p-4 mb-4 bg-black">
               {/* Parallelizable batches */}
               {!block.isSequential && (
                 <>
-                  <div className="border border-emerald-500 rounded-md p-3 bg-gradient-to-r from-emerald-50 to-teal-50 mb-2">
+                  <div className="border border-purple-800 rounded-md p-3 bg-purple-950/20 mb-2">
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">parallelizable batch #1</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-sm font-medium text-purple-400">Parallelizable batch #1</span>
+                      <span className="text-xs text-zinc-400">
                         {Math.floor(getParallelizableTxCount(block) / 2)} transactions
                       </span>
                     </div>
                   </div>
                   
-                  <div className="text-center text-muted-foreground text-xs my-1">⋮</div>
+                  <div className="text-center text-zinc-500 text-xs my-1">⋮</div>
                   
-                  <div className="border border-emerald-500 rounded-md p-3 bg-gradient-to-r from-emerald-50 to-teal-50 mb-2">
+                  <div className="border border-purple-800 rounded-md p-3 bg-purple-950/20 mb-2">
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">parallelizable batch #n</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-sm font-medium text-purple-400">Parallelizable batch #n</span>
+                      <span className="text-xs text-zinc-400">
                         {Math.ceil(getParallelizableTxCount(block) / 2)} transactions
                       </span>
                     </div>
@@ -96,13 +96,13 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
               <div 
                 className={`border rounded-md p-3 ${
                   block.isSequential 
-                    ? "border-amber-500 bg-gradient-to-r from-amber-50 to-yellow-50" 
-                    : "border-gray-300 bg-gray-50/50"
+                    ? "border-zinc-700 bg-zinc-800" 
+                    : "border-zinc-800 bg-zinc-900"
                 }`}
               >
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium">Sequential</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm font-medium text-zinc-300">Sequential</span>
+                  <span className="text-xs text-zinc-400">
                     {getSequentialTxCount(block)} transactions
                   </span>
                 </div>
@@ -110,17 +110,17 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
               
               {/* Clickable arrow for details */}
               {showDetails && selectedBlockIndex === index && (
-                <div className="mt-4 glass-panel p-3 rounded-md">
-                  <div className="text-xs text-gray-600 mb-2">Transaction Details:</div>
+                <div className="mt-4 bg-zinc-900 border border-zinc-800 p-3 rounded-md">
+                  <div className="text-xs text-zinc-400 mb-2">Transaction Details:</div>
                   <div className="space-y-1">
                     {Array.from({ length: Math.min(3, block.transactions) }).map((_, i) => (
                       <div key={i} className="flex justify-between">
-                        <span className="text-xs">Transaction #{i+1}</span>
-                        <span className="text-xs font-mono">0.00{Math.floor(Math.random() * 9) + 1} ETH</span>
+                        <span className="text-xs text-zinc-300">Transaction #{i+1}</span>
+                        <span className="text-xs font-mono text-zinc-300">0.00{Math.floor(Math.random() * 9) + 1} ETH</span>
                       </div>
                     ))}
                     {block.transactions > 3 && (
-                      <div className="text-center text-xs text-muted-foreground">
+                      <div className="text-center text-xs text-zinc-500">
                         + {block.transactions - 3} more transactions
                       </div>
                     )}
@@ -132,25 +132,26 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
             {/* Block metrics */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <div className="text-xs text-muted-foreground">expected MEV</div>
-                <div className="text-lg font-medium">{block.expectedMEV} ETH</div>
+                <div className="text-xs text-zinc-500">Expected MEV</div>
+                <div className="text-lg font-medium text-white">{block.expectedMEV} ETH</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">total fees</div>
-                <div className="text-lg font-medium">{block.totalFees} ETH</div>
+                <div className="text-xs text-zinc-500">Total Fees</div>
+                <div className="text-lg font-medium text-white">{block.totalFees} ETH</div>
               </div>
             </div>
             
             {/* Public good reward */}
             <div className="flex items-center gap-2">
-              <div className="text-sm text-muted-foreground">public good reward amount:</div>
-              <div className="text-sm font-medium">X</div>
+              <div className="text-sm text-zinc-400">Public good reward amount:</div>
+              <div className="text-sm font-medium text-purple-400">X</div>
             </div>
             
             {/* Show/hide details button */}
             <div className="mt-4 flex justify-end">
               <Button 
-                className="glass-button text-xs"
+                variant="outline"
+                className="text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (selectedBlockIndex === index) {
@@ -173,31 +174,31 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
         ))}
       </div>
 
-      <div className="glass-panel p-6 rounded-xl mt-8">
-        <h3 className="text-lg font-medium gradient-text mb-4">
+      <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl mt-8">
+        <h3 className="text-lg font-medium text-purple-400 mb-4">
           Block Formation Details
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card p-4 rounded-xl">
-            <div className="text-sm font-medium mb-2 text-blue-600">The Block Formations Are Based On:</div>
-            <ul className="list-disc list-inside text-sm text-gray-700 space-y-2">
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <div className="text-sm font-medium mb-2 text-purple-400">The Block Formations Are Based On:</div>
+            <ul className="list-disc list-inside text-sm text-zinc-300 space-y-2">
               <li>i) Maximal parallelizability</li>
               <li>ii) Transaction fee rewards</li>
               <li>iii) MEV opportunities</li>
             </ul>
           </div>
           
-          <div className="glass-card p-4 rounded-xl">
-            <div className="text-sm font-medium mb-2 text-purple-600">AVS Slashing Conditions:</div>
-            <p className="text-sm text-gray-700">
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <div className="text-sm font-medium mb-2 text-purple-400">AVS Slashing Conditions:</div>
+            <p className="text-sm text-zinc-300">
               The AVS ensures these block constititions are actually valid by 
               validating the transaction sequences and dependencies.
             </p>
           </div>
           
-          <div className="glass-card p-4 rounded-xl">
-            <div className="text-sm font-medium mb-2 text-emerald-600">Parallel Execution Benefits:</div>
-            <p className="text-sm text-gray-700">
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <div className="text-sm font-medium mb-2 text-purple-400">Parallel Execution Benefits:</div>
+            <p className="text-sm text-zinc-300">
               Parallel execution is successful when there's no time penalty due to 
               incorrectly formed batches, and batches are maximally parallelizable.
             </p>

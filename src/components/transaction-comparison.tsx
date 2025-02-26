@@ -58,34 +58,34 @@ const generateBatchesFromTransactions = (transactions: Transaction[]): BatchedTr
 const getBatchColorClasses = (color: BatchedTransaction['color']) => {
   const colorMap = {
     blue: {
-      text: 'text-secondary-700',
-      border: 'border-secondary-200',
-      bg: 'bg-secondary-50'
+      text: 'text-purple-400',
+      border: 'border-zinc-700',
+      bg: 'bg-zinc-800'
     },
     teal: {
-      text: 'text-teal-700',
-      border: 'border-teal-200',
-      bg: 'bg-teal-50'
+      text: 'text-purple-300',
+      border: 'border-zinc-700',
+      bg: 'bg-zinc-800'
     },
     purple: {
-      text: 'text-primary-700',
-      border: 'border-primary-200',
-      bg: 'bg-primary-50'
+      text: 'text-purple-400',
+      border: 'border-purple-800',
+      bg: 'bg-purple-900/20'
     },
     amber: {
-      text: 'text-warning-700',
-      border: 'border-warning-200',
-      bg: 'bg-warning-50'
+      text: 'text-purple-300',
+      border: 'border-zinc-700',
+      bg: 'bg-zinc-800'
     },
     emerald: {
-      text: 'text-success-700',
-      border: 'border-success-200',
-      bg: 'bg-success-50'
+      text: 'text-purple-400',
+      border: 'border-zinc-700',
+      bg: 'bg-zinc-800'
     },
     slate: {
-      text: 'text-neutral-700',
-      border: 'border-neutral-200',
-      bg: 'bg-neutral-50'
+      text: 'text-zinc-400',
+      border: 'border-zinc-700',
+      bg: 'bg-zinc-900'
     }
   };
   
@@ -132,9 +132,9 @@ const TransactionComparison = () => {
   return (
     <div className="space-y-6 mt-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-neutral-800">Transaction Parallelization Comparison</h2>
+        <h2 className="text-2xl font-bold text-white">Transaction Parallelization Comparison</h2>
         {latestBlockId && (
-          <Badge variant="outline" className="bg-primary-50 text-primary-700 border-primary-200">
+          <Badge variant="outline" className="bg-purple-900/20 text-purple-400 border-purple-800">
             Block {latestBlockId}
           </Badge>
         )}
@@ -142,10 +142,10 @@ const TransactionComparison = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Transactions */}
-        <Card className="bg-white border border-neutral-200 shadow-sm rounded-lg">
-          <div className="p-4 border-b border-neutral-200 flex justify-between items-center">
-            <h3 className="text-lg font-medium text-neutral-800">Recent Transactions</h3>
-            <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-200">Sequential</Badge>
+        <Card className="bg-zinc-900 border border-zinc-800 shadow-sm rounded-lg">
+          <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Recent Transactions</h3>
+            <Badge variant="outline" className="bg-zinc-800 text-zinc-400 border-zinc-700">Sequential</Badge>
           </div>
           
           <ScrollArea className="h-[400px]">
@@ -153,18 +153,18 @@ const TransactionComparison = () => {
               {currentTransactions.map((tx) => (
                 <div 
                   key={tx.id}
-                  className="p-3 rounded-lg border border-neutral-200 hover:border-neutral-300 bg-white hover:shadow-sm transition-all"
+                  className="p-3 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:shadow-sm transition-all"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center">
-                      <div className={`w-2 h-2 rounded-full ${tx.isParallelizable ? 'bg-success-500' : 'bg-warning-500'} mr-2`}></div>
-                      <span className="text-xs font-mono text-neutral-500">{tx.id}</span>
+                      <div className={`w-2 h-2 rounded-full ${tx.isParallelizable ? 'bg-purple-500' : 'bg-zinc-500'} mr-2`}></div>
+                      <span className="text-xs font-mono text-zinc-400">{tx.id}</span>
                     </div>
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${tx.isParallelizable 
-                        ? 'bg-success-50 text-success-700 border-success-200' 
-                        : 'bg-warning-50 text-warning-700 border-warning-200'}`}
+                        ? 'bg-purple-900/20 text-purple-400 border-purple-800' 
+                        : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}
                     >
                       {tx.isParallelizable ? 'Parallelizable' : 'Sequential'}
                     </Badge>
@@ -172,16 +172,16 @@ const TransactionComparison = () => {
                   
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <div className="text-xs text-neutral-500">From</div>
-                      <div className="font-mono text-xs text-neutral-700">{formatAddress(tx.from)}</div>
+                      <div className="text-xs text-zinc-500">From</div>
+                      <div className="font-mono text-xs text-zinc-300">{formatAddress(tx.from)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-neutral-500">To</div>
-                      <div className="font-mono text-xs text-neutral-700">{formatAddress(tx.to)}</div>
+                      <div className="text-xs text-zinc-500">To</div>
+                      <div className="font-mono text-xs text-zinc-300">{formatAddress(tx.to)}</div>
                     </div>
                   </div>
                   
-                  <div className="mt-2 flex justify-between text-xs text-neutral-500">
+                  <div className="mt-2 flex justify-between text-xs text-zinc-500">
                     <span>{tx.value} ETH</span>
                     <span>{tx.gasUsed} gas</span>
                     <span>{formatTimestamp(tx.timestamp)}</span>
@@ -190,7 +190,7 @@ const TransactionComparison = () => {
               ))}
               
               {currentTransactions.length === 0 && (
-                <div className="flex items-center justify-center h-32 text-neutral-500">
+                <div className="flex items-center justify-center h-32 text-zinc-500">
                   No transactions available
                 </div>
               )}
@@ -200,10 +200,10 @@ const TransactionComparison = () => {
         </Card>
         
         {/* Batched Transactions */}
-        <Card className="bg-white border border-neutral-200 shadow-sm rounded-lg">
-          <div className="p-4 border-b border-neutral-200 flex justify-between items-center">
-            <h3 className="text-lg font-medium text-neutral-800">Optimized Batches</h3>
-            <Badge variant="outline" className="bg-success-50 text-success-700 border-success-200">Parallel</Badge>
+        <Card className="bg-zinc-900 border border-zinc-800 shadow-sm rounded-lg">
+          <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+            <h3 className="text-lg font-medium text-white">Optimized Batches</h3>
+            <Badge variant="outline" className="bg-purple-900/20 text-purple-400 border-purple-800">Parallel</Badge>
           </div>
           
           <ScrollArea className="h-[400px]">
@@ -217,35 +217,35 @@ const TransactionComparison = () => {
                       <h4 className={cn("text-sm font-medium", colorClasses.text)}>{batch.batchId}</h4>
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500 mr-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 mr-1">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                           </svg>
-                          <span className="text-xs text-neutral-600">{batch.executionTime}</span>
+                          <span className="text-xs text-zinc-400">{batch.executionTime}</span>
                         </div>
                         
                         <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500 mr-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 mr-1">
                             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
                           </svg>
-                          <span className="text-xs text-neutral-600">{batch.gasEfficiency} saved</span>
+                          <span className="text-xs text-zinc-400">{batch.gasEfficiency} saved</span>
                         </div>
                       </div>
                     </div>
                     
                     <div className={cn("border rounded-lg p-3", colorClasses.border, colorClasses.bg)}>
-                      <div className="text-xs text-neutral-600 mb-2">{batch.transactions.length} transactions</div>
+                      <div className="text-xs text-zinc-400 mb-2">{batch.transactions.length} transactions</div>
                       
                       <div className="space-y-2">
                         {batch.transactions.slice(0, 2).map((tx) => (
-                          <div key={tx.id} className="flex justify-between items-center p-2 bg-white rounded border border-neutral-200 text-xs">
-                            <span className="font-mono">{formatAddress(tx.id)}</span>
-                            <span>{tx.value} ETH</span>
+                          <div key={tx.id} className="flex justify-between items-center p-2 bg-zinc-900 rounded border border-zinc-800 text-xs">
+                            <span className="font-mono text-zinc-300">{formatAddress(tx.id)}</span>
+                            <span className="text-zinc-300">{tx.value} ETH</span>
                           </div>
                         ))}
                         
                         {batch.transactions.length > 2 && (
-                          <div className="text-center text-xs text-neutral-500 py-1">
+                          <div className="text-center text-xs text-zinc-500 py-1">
                             + {batch.transactions.length - 2} more transactions
                           </div>
                         )}
@@ -256,7 +256,7 @@ const TransactionComparison = () => {
               })}
               
               {batches.length === 0 && (
-                <div className="flex items-center justify-center h-32 text-neutral-500">
+                <div className="flex items-center justify-center h-32 text-zinc-500">
                   No batches available
                 </div>
               )}

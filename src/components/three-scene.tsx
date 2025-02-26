@@ -29,14 +29,14 @@ interface VisBatch {
 
 // Colors for different batches
 const batchColors = [
-  '#7c3aed', // primary-600
-  '#0d9488', // secondary-600
-  '#16a34a', // success-600
-  '#ea580c', // warning-600
-  '#6366f1', // indigo-500
-  '#8b5cf6', // purple-500
-  '#ec4899', // pink-500
-  '#14b8a6', // teal-500
+  '#9333ea', // purple-600
+  '#a855f7', // purple-500
+  '#c084fc', // purple-400
+  '#7e22ce', // purple-700
+  '#581c87', // purple-900
+  '#6b21a8', // purple-800
+  '#9333ea', // purple-600 (repeat)
+  '#a855f7', // purple-500 (repeat)
 ];
 
 // Generate mock state access patterns for transactions
@@ -151,7 +151,7 @@ const TransactionSphere = ({ transaction }: { transaction: VisTransaction }) => 
       <sphereGeometry args={[transaction.size, 16, 16]} />
       <meshStandardMaterial color={transaction.color} />
       <Html distanceFactor={10}>
-        <div className="bg-white/80 px-1 py-0.5 rounded text-xs whitespace-nowrap">
+        <div className="bg-zinc-900/80 px-1 py-0.5 rounded text-xs text-white whitespace-nowrap border border-zinc-700">
           {transaction.id.substring(0, 6)}
         </div>
       </Html>
@@ -166,7 +166,7 @@ const BatchContainer = ({ batch }: { batch: VisBatch }) => {
       {/* Batch label */}
       <Text
         position={[0, 1.5, 0]}
-        color="black"
+        color="white"
         fontSize={0.5}
         anchorX="center"
         anchorY="middle"
@@ -203,7 +203,7 @@ const StateConnections = ({ transactions }: { transactions: VisTransaction[] }) 
             <Line
               key={`${tx.id}-${otherTx.id}-${state}`}
               points={[tx.position, otherTx.position]}
-              color="#9ca3af" // neutral-400
+              color="#a1a1aa" // zinc-400
               lineWidth={1}
               dashed
               dashSize={0.2}
@@ -234,7 +234,7 @@ const BatchingScene = ({ transactions }: { transactions: VisTransaction[] }) => 
   // Set up scene lighting
   const { scene } = useThree();
   useEffect(() => {
-    scene.background = new THREE.Color('#f5f3ff'); // primary-50
+    scene.background = new THREE.Color('#09090b'); // zinc-950
   }, [scene]);
   
   return (

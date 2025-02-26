@@ -74,7 +74,8 @@ const BlockStreamVisualization = ({
       <div className="flex justify-end">
         <div className="flex space-x-3">
           <Button 
-            className={`${isSimulating ? 'bg-destructive hover:bg-destructive/90' : 'bg-success-600 hover:bg-success-700'} text-white shadow-sm`}
+            variant={isSimulating ? "destructive" : "default"}
+            className={`shadow-sm ${isSimulating ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"} text-white`}
             onClick={handleSimulationToggle}
             aria-label={isSimulating ? "Stop simulation" : "Start simulation"}
           >
@@ -97,7 +98,8 @@ const BlockStreamVisualization = ({
           </Button>
           
           <Button 
-            className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
+            variant="secondary"
+            className="shadow-sm bg-black hover:bg-black/80 text-white"
             onClick={handleManualNewBlock}
             aria-label="Add new block"
           >
@@ -110,7 +112,7 @@ const BlockStreamVisualization = ({
         </div>
       </div>
 
-      <ScrollArea className="w-full whitespace-nowrap rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <ScrollArea className="w-full whitespace-nowrap rounded-lg border border-zinc-800 bg-black shadow-sm">
         <div 
           className="flex p-4 pb-8 gap-4"
           ref={scrollContainerRef}
@@ -118,8 +120,8 @@ const BlockStreamVisualization = ({
           {blocks.map((block) => (
             <Card 
               key={block.id}
-              className={`min-w-[280px] max-w-[280px] bg-white border border-neutral-200 hover:border-neutral-300 hover:shadow-md cursor-pointer transition-all ${
-                selectedBlock?.id === block.id ? "shadow-md border-primary-300 ring-1 ring-primary-300" : ""
+              className={`min-w-[280px] max-w-[280px] bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:shadow-md cursor-pointer transition-all ${
+                selectedBlock?.id === block.id ? "shadow-md border-purple-500 ring-1 ring-purple-500" : ""
               }`}
               onClick={() => handleBlockClick(block)}
               tabIndex={0} 
@@ -132,41 +134,41 @@ const BlockStreamVisualization = ({
             >
               <div className="p-4 space-y-4">
                 <div className="flex justify-between items-center">
-                  <Badge variant="outline" className="text-xs font-mono bg-neutral-50 text-neutral-700 border-neutral-200">
+                  <Badge variant="outline" className="text-xs font-mono bg-black text-zinc-400 border-zinc-700">
                     {block.id}
                   </Badge>
                   <Badge 
-                    variant={block.isSequential ? "secondary" : "default"} 
+                    variant={block.isSequential ? "outline" : "default"} 
                     className={`text-xs ${block.isSequential 
-                      ? "bg-warning-50 text-warning-700 border-warning-200" 
-                      : "bg-success-50 text-success-700 border-success-200"}`}
+                      ? "bg-zinc-800 text-zinc-300 border-zinc-700" 
+                      : "bg-purple-900 text-purple-100 border-purple-700"}`}
                   >
                     {block.isSequential ? "Sequential" : "Parallel"}
                   </Badge>
                 </div>
                 
                 {/* Visual representation of block structure */}
-                <div className="border border-neutral-200 rounded-lg p-3 space-y-2 bg-neutral-50">
+                <div className="border border-zinc-800 rounded-lg p-3 space-y-2 bg-black">
                   {/* Parallelizable batches */}
                   {!block.isSequential && getParallelizableTxCount(block) > 0 && (
                     <>
-                      <div className="border border-success-300 rounded-md p-2 bg-success-50">
+                      <div className="border border-purple-800 rounded-md p-2 bg-purple-950">
                         <div className="flex justify-between">
-                          <span className="text-xs font-medium text-success-700">Parallelizable batch #1</span>
-                          <span className="text-xs text-success-600">
+                          <span className="text-xs font-medium text-purple-300">Parallelizable batch #1</span>
+                          <span className="text-xs text-purple-400">
                             {Math.floor(getParallelizableTxCount(block) / 2)} transactions
                           </span>
                         </div>
                       </div>
                       
                       {getParallelizableTxCount(block) > 2 && (
-                        <div className="text-center text-neutral-500 text-xs my-1">⋮</div>
+                        <div className="text-center text-zinc-500 text-xs my-1">⋮</div>
                       )}
                       
-                      <div className="border border-success-300 rounded-md p-2 bg-success-50">
+                      <div className="border border-purple-800 rounded-md p-2 bg-purple-950">
                         <div className="flex justify-between">
-                          <span className="text-xs font-medium text-success-700">Parallelizable batch #n</span>
-                          <span className="text-xs text-success-600">
+                          <span className="text-xs font-medium text-purple-300">Parallelizable batch #n</span>
+                          <span className="text-xs text-purple-400">
                             {Math.ceil(getParallelizableTxCount(block) / 2)} transactions
                           </span>
                         </div>
@@ -178,15 +180,15 @@ const BlockStreamVisualization = ({
                   <div 
                     className={`border rounded-md p-2 ${
                       block.isSequential 
-                        ? "border-warning-300 bg-warning-50" 
-                        : "border-neutral-300 bg-white"
+                        ? "border-zinc-700 bg-zinc-800" 
+                        : "border-zinc-800 bg-zinc-900"
                     }`}
                   >
                     <div className="flex justify-between">
-                      <span className={`text-xs font-medium ${block.isSequential ? "text-warning-700" : "text-neutral-700"}`}>
+                      <span className={`text-xs font-medium ${block.isSequential ? "text-white" : "text-zinc-300"}`}>
                         Sequential
                       </span>
-                      <span className={`text-xs ${block.isSequential ? "text-warning-600" : "text-neutral-600"}`}>
+                      <span className={`text-xs ${block.isSequential ? "text-zinc-300" : "text-zinc-400"}`}>
                         {getSequentialTxCount(block)} transactions
                       </span>
                     </div>
@@ -196,12 +198,12 @@ const BlockStreamVisualization = ({
                 {/* Block metrics */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <div className="text-xs text-neutral-500">Expected MEV</div>
-                    <div className="text-sm font-medium text-neutral-800">{block.expectedMEV} ETH</div>
+                    <div className="text-xs text-zinc-500">Expected MEV</div>
+                    <div className="text-sm font-medium text-white">{block.expectedMEV} ETH</div>
                   </div>
                   <div>
-                    <div className="text-xs text-neutral-500">Total Fees</div>
-                    <div className="text-sm font-medium text-neutral-800">{block.totalFees} ETH</div>
+                    <div className="text-xs text-zinc-500">Total Fees</div>
+                    <div className="text-sm font-medium text-white">{block.totalFees} ETH</div>
                   </div>
                 </div>
                 
@@ -209,14 +211,14 @@ const BlockStreamVisualization = ({
                 {!block.isSequential && (
                   <div className="pt-2">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-neutral-500">Parallelization Rate</span>
-                      <span className="text-xs font-medium text-neutral-800">
+                      <span className="text-xs text-zinc-500">Parallelization Rate</span>
+                      <span className="text-xs font-medium text-white">
                         {Math.round((getParallelizableTxCount(block) / block.transactions) * 100)}%
                       </span>
                     </div>
-                    <div className="bg-neutral-200 h-2 rounded-full overflow-hidden">
+                    <div className="bg-zinc-800 h-2 rounded-full overflow-hidden">
                       <div 
-                        className="bg-success-500 h-full rounded-full"
+                        className="bg-purple-600 h-full rounded-full"
                         style={{ width: `${(getParallelizableTxCount(block) / block.transactions) * 100}%` }}
                       ></div>
                     </div>
@@ -230,41 +232,41 @@ const BlockStreamVisualization = ({
       </ScrollArea>
 
       {selectedBlock && showDetails && (
-        <Card className="bg-white border border-neutral-200 p-6 rounded-xl mt-4 shadow-sm">
-          <h3 className="text-lg font-medium text-neutral-800 mb-4">Block {selectedBlock.id} Details</h3>
+        <Card className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl mt-4 shadow-sm">
+          <h3 className="text-lg font-medium text-white mb-4">Block {selectedBlock.id} Details</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-neutral-700 mb-2">Transaction Breakdown</h4>
+                <h4 className="text-sm font-medium text-white mb-2">Transaction Breakdown</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Total Transactions</span>
-                    <span className="text-sm font-medium text-neutral-800">{selectedBlock.transactions}</span>
+                    <span className="text-sm text-zinc-400">Total Transactions</span>
+                    <span className="text-sm font-medium text-white">{selectedBlock.transactions}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Sequential Transactions</span>
-                    <span className="text-sm font-medium text-neutral-800">{getSequentialTxCount(selectedBlock)}</span>
+                    <span className="text-sm text-zinc-400">Sequential Transactions</span>
+                    <span className="text-sm font-medium text-white">{getSequentialTxCount(selectedBlock)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Parallelizable Transactions</span>
-                    <span className="text-sm font-medium text-neutral-800">{getParallelizableTxCount(selectedBlock)}</span>
+                    <span className="text-sm text-zinc-400">Parallelizable Transactions</span>
+                    <span className="text-sm font-medium text-white">{getParallelizableTxCount(selectedBlock)}</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-neutral-700 mb-2">Efficiency Metrics</h4>
+                <h4 className="text-sm font-medium text-white mb-2">Efficiency Metrics</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Gas Efficiency Gain</span>
-                    <span className="text-sm font-medium text-success-600">
+                    <span className="text-sm text-zinc-400">Gas Efficiency Gain</span>
+                    <span className="text-sm font-medium text-purple-400">
                       {selectedBlock.isSequential ? "0%" : `${Math.round((getParallelizableTxCount(selectedBlock) / selectedBlock.transactions) * 40)}%`}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Execution Time Saved</span>
-                    <span className="text-sm font-medium text-success-600">
+                    <span className="text-sm text-zinc-400">Execution Time Saved</span>
+                    <span className="text-sm font-medium text-purple-400">
                       {selectedBlock.isSequential ? "0ms" : `${Math.round((getParallelizableTxCount(selectedBlock) / selectedBlock.transactions) * 350)}ms`}
                     </span>
                   </div>
@@ -274,19 +276,19 @@ const BlockStreamVisualization = ({
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-neutral-700 mb-2">Economic Impact</h4>
+                <h4 className="text-sm font-medium text-white mb-2">Economic Impact</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Total Fees</span>
-                    <span className="text-sm font-medium text-neutral-800">{selectedBlock.totalFees} ETH</span>
+                    <span className="text-sm text-zinc-400">Total Fees</span>
+                    <span className="text-sm font-medium text-white">{selectedBlock.totalFees} ETH</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Expected MEV</span>
-                    <span className="text-sm font-medium text-neutral-800">{selectedBlock.expectedMEV} ETH</span>
+                    <span className="text-sm text-zinc-400">Expected MEV</span>
+                    <span className="text-sm font-medium text-white">{selectedBlock.expectedMEV} ETH</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-600">Validator Reward</span>
-                    <span className="text-sm font-medium text-neutral-800">
+                    <span className="text-sm text-zinc-400">Validator Reward</span>
+                    <span className="text-sm font-medium text-white">
                       {(parseFloat(selectedBlock.totalFees) + parseFloat(selectedBlock.expectedMEV)).toFixed(3)} ETH
                     </span>
                   </div>
@@ -294,9 +296,9 @@ const BlockStreamVisualization = ({
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-neutral-700 mb-2">Optimization Potential</h4>
-                <div className="p-3 rounded-md bg-primary-50 border border-primary-100">
-                  <p className="text-sm text-neutral-700">
+                <h4 className="text-sm font-medium text-white mb-2">Optimization Potential</h4>
+                <div className="p-3 rounded-md bg-purple-950 border border-purple-800">
+                  <p className="text-sm text-zinc-300">
                     {selectedBlock.isSequential 
                       ? "This block is fully sequential and cannot be parallelized with the current transaction set."
                       : `This block has ${Math.round((getParallelizableTxCount(selectedBlock) / selectedBlock.transactions) * 100)}% parallelization potential, which could be further optimized with transaction reordering.`

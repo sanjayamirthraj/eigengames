@@ -84,7 +84,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <div className="p-4 flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-md bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center text-white font-bold mr-2">
+              <div className="w-8 h-8 rounded-md bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold mr-2">
                 E
               </div>
               <h1 className="text-lg font-medium gradient-text">Eigen</h1>
@@ -92,7 +92,7 @@ export default function Sidebar({ className }: SidebarProps) {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-md hover:bg-slate-100"
+            className="p-2 rounded-md hover:bg-zinc-800 text-zinc-400"
             aria-label="Toggle sidebar"
           >
             <MenuToggleIcon />
@@ -120,10 +120,10 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <div className="p-4 mt-auto">
           {!collapsed && (
-            <div className="glass-panel rounded-lg p-3 text-xs text-slate-600">
+            <div className="bg-zinc-900 rounded-lg p-3 text-xs text-zinc-400 border border-zinc-800">
               <p className="font-medium mb-1">Ethereum Mainnet</p>
               <div className="flex items-center">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
                 <span>Connected</span>
               </div>
             </div>

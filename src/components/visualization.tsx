@@ -37,7 +37,7 @@ const EthereumTransactionBatching = () => {
     
     // Initialize batch processing scene
     const batchScene = new THREE.Scene();
-    batchScene.background = new THREE.Color(0xf8fafc);
+    batchScene.background = new THREE.Color(0x09090b); // zinc-950
     batchSceneRef.current = batchScene;
     
     const batchCamera = new THREE.PerspectiveCamera(
@@ -67,7 +67,7 @@ const EthereumTransactionBatching = () => {
 
     // Initialize individual processing scene
     const indivScene = new THREE.Scene();
-    indivScene.background = new THREE.Color(0xf8fafc);
+    indivScene.background = new THREE.Color(0x09090b); // zinc-950
     indivSceneRef.current = indivScene;
     
     const indivCamera = new THREE.PerspectiveCamera(
@@ -274,10 +274,10 @@ const EthereumTransactionBatching = () => {
     for (let i = 0; i < 5; i++) {
       const blockGeo = new THREE.BoxGeometry(4, 2, 3);
       const blockMat = new THREE.MeshStandardMaterial({
-        color: 0xe2e8f0, // Light gray
+        color: 0x27272a, // zinc-800
         metalness: 0.2,
         roughness: 0.3,
-        emissive: 0xf1f5f9,
+        emissive: 0x3f3f46, // zinc-700
         emissiveIntensity: 0.2
       });
       const block = new THREE.Mesh(blockGeo, blockMat);
@@ -291,7 +291,7 @@ const EthereumTransactionBatching = () => {
       if (i > 0) {
         const hashLineGeo = new THREE.CylinderGeometry(0.08, 0.08, 5, 8);
         const hashLineMat = new THREE.MeshBasicMaterial({ 
-          color: 0x3b82f6,
+          color: 0x7c3aed, // purple-600
           transparent: true,
           opacity: 0.6
         });
@@ -307,12 +307,12 @@ const EthereumTransactionBatching = () => {
     // Create newer block being processed
     const newBlockGeo = new THREE.BoxGeometry(4, 2, 3);
     const newBlockMat = new THREE.MeshStandardMaterial({
-      color: 0x60a5fa, // Light blue
+      color: 0x7c3aed, // purple-600
       metalness: 0.3,
       roughness: 0.2,
       transparent: true,
       opacity: 0.9,
-      emissive: 0x3b82f6,
+      emissive: 0xa855f7, // purple-500
       emissiveIntensity: 0.2
     });
     const newBlock = new THREE.Mesh(newBlockGeo, newBlockMat);
@@ -323,7 +323,7 @@ const EthereumTransactionBatching = () => {
     
     const hashLineGeo = new THREE.CylinderGeometry(0.08, 0.08, 5, 8);
     const hashLineMat = new THREE.MeshBasicMaterial({ 
-      color: 0x3b82f6,
+      color: 0x7c3aed, // purple-600
       transparent: true,
       opacity: 0.6
     });
@@ -347,12 +347,12 @@ const EthereumTransactionBatching = () => {
     // Create a mempool container with glowing effect
     const geometry = new THREE.CylinderGeometry(7, 7, 1, 32);
     const material = new THREE.MeshStandardMaterial({
-      color: 0xf1f5f9, // Very light gray
+      color: 0x18181b, // zinc-900
       transparent: true,
       opacity: 0.8,
       metalness: 0.2,
       roughness: 0.3,
-      emissive: 0xe2e8f0,
+      emissive: 0x27272a, // zinc-800
       emissiveIntensity: 0.2
     });
     const mempool = new THREE.Mesh(geometry, material);
@@ -364,7 +364,7 @@ const EthereumTransactionBatching = () => {
     // Add glow effect ring
     const glowGeo = new THREE.TorusGeometry(7.2, 0.2, 16, 32);
     const glowMat = new THREE.MeshBasicMaterial({ 
-      color: 0x3b82f6,
+      color: 0x9333ea, // purple-600
       transparent: true,
       opacity: 0.4
     });
@@ -385,12 +385,12 @@ const EthereumTransactionBatching = () => {
     // Create batching area platform with glowing edges
     const geometry = new THREE.BoxGeometry(20, 0.5, 10);
     const material = new THREE.MeshStandardMaterial({
-      color: 0xf8fafc, // Lightest gray
+      color: 0x18181b, // zinc-900
       transparent: true,
       opacity: 0.9,
       metalness: 0.2,
       roughness: 0.3,
-      emissive: 0xf1f5f9,
+      emissive: 0x27272a, // zinc-800
       emissiveIntensity: 0.2
     });
     const platform = new THREE.Mesh(geometry, material);
@@ -401,7 +401,7 @@ const EthereumTransactionBatching = () => {
     // Add platform glow edges
     const edgeGeo = new THREE.BoxGeometry(20.2, 0.1, 10.2);
     const edgeMat = new THREE.MeshBasicMaterial({
-      color: 0x3b82f6,
+      color: 0x9333ea, // purple-600
       transparent: true,
       opacity: 0.4
     });
@@ -422,12 +422,12 @@ const EthereumTransactionBatching = () => {
     batchPositions.forEach((pos) => {
       const batchGeo = new THREE.BoxGeometry(4, 0.5, 6);
       const batchMat = new THREE.MeshStandardMaterial({
-        color: 0xe2e8f0,
+        color: 0x27272a, // zinc-800
         transparent: true,
         opacity: 0.9,
         metalness: 0.2,
         roughness: 0.3,
-        emissive: 0xf1f5f9,
+        emissive: 0x3f3f46, // zinc-700
         emissiveIntensity: 0.2
       });
       const batch = new THREE.Mesh(batchGeo, batchMat);
@@ -441,7 +441,7 @@ const EthereumTransactionBatching = () => {
       const batchGlow = new THREE.Mesh(
         new THREE.BoxGeometry(4.2, 0.1, 6.2),
         new THREE.MeshBasicMaterial({
-          color: 0x3b82f6,
+          color: 0x9333ea, // purple-600
           transparent: true,
           opacity: 0.3
         })
@@ -1531,27 +1531,27 @@ const EthereumTransactionBatching = () => {
     const individualTime = comparisonStats.individual.time / 1000;
     const efficiency = ((individualTime - batchTime) / individualTime * 100).toFixed(1);
 
-  return (
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mt-4">
-        <h3 className="font-bold text-blue-800 mb-2">Performance Comparison</h3>
+    return (
+      <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg mt-4">
+        <h3 className="font-bold text-purple-300 mb-2">Performance Comparison</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Individual Processing</div>
-            <div className="text-lg font-bold text-gray-800">{individualTime.toFixed(1)}s</div>
-            <div className="text-xs text-gray-500">{comparisonStats.individual.count} transactions</div>
+          <div className="bg-zinc-900 p-3 rounded shadow-sm">
+            <div className="text-sm text-zinc-400">Individual Processing</div>
+            <div className="text-lg font-bold text-white">{individualTime.toFixed(1)}s</div>
+            <div className="text-xs text-zinc-500">{comparisonStats.individual.count} transactions</div>
           </div>
-          <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Batch Processing (EigenLayer AVS)</div>
-            <div className="text-lg font-bold text-green-600">{batchTime.toFixed(1)}s</div>
-            <div className="text-xs text-gray-500">{comparisonStats.batch.count} transactions</div>
+          <div className="bg-zinc-900 p-3 rounded shadow-sm">
+            <div className="text-sm text-zinc-400">Batch Processing (EigenLayer AVS)</div>
+            <div className="text-lg font-bold text-purple-400">{batchTime.toFixed(1)}s</div>
+            <div className="text-xs text-zinc-500">{comparisonStats.batch.count} transactions</div>
           </div>
         </div>
-        <div className="mt-3 text-center bg-green-100 p-2 rounded">
-          <span className="font-bold text-green-700">
+        <div className="mt-3 text-center bg-purple-900/30 p-2 rounded">
+          <span className="font-bold text-purple-300">
             EigenLayer AVS batching is {efficiency}% faster!
           </span>
         </div>
-        <div className="mt-2 text-xs text-gray-600 text-center">
+        <div className="mt-2 text-xs text-zinc-400 text-center">
           EigenLayer's Actively Validated Services (AVS) provide distributed compute resources that make transaction batching significantly faster.
         </div>
       </div>
@@ -1559,22 +1559,22 @@ const EthereumTransactionBatching = () => {
   };
 
   return (
-    <div className="flex flex-col w-full mt-auto bg-white text-gray-900 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
+    <div className="flex flex-col w-full mt-auto bg-zinc-900 text-white rounded-lg overflow-hidden">
+      <div className="p-4 border-b border-zinc-800">
         <h2 className="text-xl font-bold">Ethereum Transaction Processing Comparison</h2>
-        <p className="text-gray-600 mt-2">
+        <p className="text-zinc-400 mt-2">
           Comparison of traditional fee-based sequential processing vs. EigenLayer AVS state-based batching for optimized throughput.
         </p>
       </div>
       
-      <div className="flex items-center justify-between p-4 bg-gray-50">
-        <div className="text-sm md:text-base text-gray-700">
+      <div className="flex items-center justify-between p-4 bg-zinc-800">
+        <div className="text-sm md:text-base text-zinc-300">
           {explanation}
         </div>
         <button 
           onClick={startComparison}
           disabled={isSimulating}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded disabled:opacity-50"
+          className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded disabled:opacity-50"
           aria-label="Start comparison"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -1587,15 +1587,15 @@ const EthereumTransactionBatching = () => {
         </button>
       </div>
       
-      <div className="flex flex-col w-full" style={{ background: '#f8fafc' }}>
-        <div className="w-full h-[275px] relative border-b border-gray-200">
-          <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium z-10">
+      <div className="flex flex-col w-full" style={{ background: '#09090b' }}>
+        <div className="w-full h-[275px] relative border-b border-zinc-800">
+          <div className="absolute top-2 left-2 bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full text-sm font-medium z-10">
             Batch Processing
           </div>
           <div ref={batchMountRef} className="w-full h-full" />
         </div>
         <div className="w-full h-[275px] relative">
-          <div className="absolute top-2 left-2 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium z-10">
+          <div className="absolute top-2 left-2 bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-sm font-medium z-10">
             Individual Processing
           </div>
           <div ref={individualMountRef} className="w-full h-full" />
@@ -1604,36 +1604,36 @@ const EthereumTransactionBatching = () => {
       
       {displayComparisonStats()}
       
-      <div className="p-4 bg-gray-50 text-sm">
-        <h3 className="font-bold mb-2 text-gray-900">Key Concepts:</h3>
+      <div className="p-4 bg-zinc-800 text-sm">
+        <h3 className="font-bold mb-2 text-white">Key Concepts:</h3>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <li className="flex items-center">
-            <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">Transactions in mempool</span>
+            <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
+            <span className="text-zinc-300">Transactions in mempool</span>
           </li>
           <li className="flex items-center">
             <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 0 transactions</span>
+            <span className="text-zinc-300">State 0 transactions</span>
           </li>
           <li className="flex items-center">
             <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 2 transactions</span>
+            <span className="text-zinc-300">State 2 transactions</span>
           </li>
           <li className="flex items-center">
             <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 4 transactions</span>
+            <span className="text-zinc-300">State 4 transactions</span>
           </li>
           <li className="flex items-center">
             <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 3 transactions</span>
+            <span className="text-zinc-300">State 3 transactions</span>
           </li>
           <li className="flex items-center">
-            <div className="w-4 h-4 bg-gray-400 rounded-full mr-2"></div>
-            <span className="text-gray-700">Blockchain blocks</span>
+            <div className="w-4 h-4 bg-zinc-400 rounded-full mr-2"></div>
+            <span className="text-zinc-300">Blockchain blocks</span>
           </li>
           <li className="flex items-center">
-            <div className="flex items-center h-4 bg-gradient-to-r from-green-400 to-blue-500 w-4 rounded-full mr-2"></div>
-            <span className="text-gray-700">Transaction fee (height = fee size)</span>
+            <div className="flex items-center h-4 bg-gradient-to-r from-green-400 to-purple-500 w-4 rounded-full mr-2"></div>
+            <span className="text-zinc-300">Transaction fee (height = fee size)</span>
           </li>
         </ul>
       </div>

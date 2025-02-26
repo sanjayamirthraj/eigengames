@@ -26,13 +26,13 @@ interface TransactionChartsProps {
 const TransactionCharts = ({ className }: TransactionChartsProps) => {
   const chartData = React.useMemo(() => generateChartData(), []);
   const txTypeData = React.useMemo(() => generateTxTypeData(), []);
-  const COLORS = ["#10b981", "#f59e0b"];
+  const COLORS = ["#a855f7", "#3f3f46"]; // purple-500, zinc-700
 
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${className}`}>
-      <Card className="glass-card overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-          <CardTitle className="text-lg">Transaction Types (24h)</CardTitle>
+      <Card className="bg-zinc-900 border border-zinc-800 shadow-sm overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-lg text-white">Transaction Types (24h)</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="h-[300px]">
@@ -46,31 +46,32 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
                   bottom: 0,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" /> {/* zinc-800 */}
                 <XAxis 
                   dataKey="time" 
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: "#a1a1aa" }} {/* zinc-400 */}
                 />
                 <YAxis 
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: "#a1a1aa" }} {/* zinc-400 */}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: "rgba(255, 255, 255, 0.8)", 
+                    backgroundColor: "rgba(24, 24, 27, 0.8)", // zinc-900
                     borderRadius: "8px",
                     backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)"
+                    border: "1px solid rgba(63, 63, 70, 1)", // zinc-700
+                    color: "#ffffff"
                   }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="parallelTx" 
                   stackId="1"
-                  stroke="#10b981" 
+                  stroke="#a855f7" /* purple-500 */
                   fill="url(#colorParallel)" 
                   name="Parallelizable Tx"
                 />
@@ -78,18 +79,18 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
                   type="monotone" 
                   dataKey="sequentialTx" 
                   stackId="1"
-                  stroke="#f59e0b" 
+                  stroke="#3f3f46" /* zinc-700 */
                   fill="url(#colorSequential)" 
                   name="Sequential Tx"
                 />
                 <defs>
                   <linearGradient id="colorParallel" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8}/> {/* purple-500 */}
+                    <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1}/> {/* purple-500 */}
                   </linearGradient>
                   <linearGradient id="colorSequential" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#3f3f46" stopOpacity={0.8}/> {/* zinc-700 */}
+                    <stop offset="95%" stopColor="#3f3f46" stopOpacity={0.1}/> {/* zinc-700 */}
                   </linearGradient>
                 </defs>
               </AreaChart>
@@ -98,9 +99,9 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-          <CardTitle className="text-lg">Current Transaction Distribution</CardTitle>
+      <Card className="bg-zinc-900 border border-zinc-800 shadow-sm overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-lg text-white">Current Transaction Distribution</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center h-[300px]">
@@ -125,10 +126,11 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
                   <Legend verticalAlign="bottom" height={36} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: "rgba(255, 255, 255, 0.8)", 
+                      backgroundColor: "rgba(24, 24, 27, 0.8)", // zinc-900
                       borderRadius: "8px",
                       backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)"
+                      border: "1px solid rgba(63, 63, 70, 1)", // zinc-700
+                      color: "#ffffff"
                     }}
                     formatter={(value) => [`${value}%`, "Percentage"]}
                   />
@@ -139,9 +141,9 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card overflow-hidden lg:col-span-2">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-          <CardTitle className="text-lg">Public Good Rewards (Last 30 Days)</CardTitle>
+      <Card className="bg-zinc-900 border border-zinc-800 shadow-sm overflow-hidden lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="text-lg text-white">Public Good Rewards (Last 30 Days)</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="h-[250px]">
@@ -158,25 +160,26 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
                   bottom: 5,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" /> {/* zinc-800 */}
                 <XAxis 
                   dataKey="day" 
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: "#a1a1aa" }} {/* zinc-400 */}
                 />
                 <YAxis 
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: "#a1a1aa" }} {/* zinc-400 */}
                   tickFormatter={(value) => `${value.toFixed(1)} ETH`}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: "rgba(255, 255, 255, 0.8)", 
+                    backgroundColor: "rgba(24, 24, 27, 0.8)", // zinc-900
                     borderRadius: "8px",
                     backdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)"
+                    border: "1px solid rgba(63, 63, 70, 1)", // zinc-700
+                    color: "#ffffff"
                   }}
                   formatter={(value) => [`${value.toFixed(4)} ETH`, "Reward"]}
                   labelFormatter={(value) => `Day ${value}`}
@@ -189,8 +192,8 @@ const TransactionCharts = ({ className }: TransactionChartsProps) => {
                 />
                 <defs>
                   <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#9333ea" stopOpacity={0.8}/> {/* purple-600 */}
+                    <stop offset="100%" stopColor="#6b21a8" stopOpacity={0.8}/> {/* purple-800 */}
                   </linearGradient>
                 </defs>
               </BarChart>
