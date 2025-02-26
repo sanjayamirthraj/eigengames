@@ -282,7 +282,7 @@ const EthereumTransactionBatching = () => {
       });
       const block = new THREE.Mesh(blockGeo, blockMat);
       
-      // Position blocks in a chain
+      // Position blocks in a chain (X-axis only)
       block.position.set(i * 5, 0, 0);
       block.castShadow = true;
       block.receiveShadow = true;
@@ -756,10 +756,10 @@ const EthereumTransactionBatching = () => {
         1500
       );
       
-      // Create two blocks to fill
+      // Create blocks aligned with blockchain visualization
       const blocks = [
-        { position: { x: 15, y: 0, z: -3 }, transactions: [] }, // Adjusted position to match createBlockchain
-        { position: { x: 15, y: 0, z: 3 }, transactions: [] }
+        { position: { x: 25, y: 0, z: 0 }, transactions: [] }, // Matches blockchain position
+        { position: { x: 30, y: 0, z: 0 }, transactions: [] }     // Next block in chain
       ];
       
       let currentBlockIndex = 0;
@@ -838,14 +838,12 @@ const EthereumTransactionBatching = () => {
           600
         );
         
-        // Calculate final position in blockchain block
-        if (!indivBlockRef.current) continue;
-        
-        const txCountInBlock = currentBlock.transactions.length - 1; // Current position in block
+        // Calculate final position within blockchain block bounds
+        const txCountInBlock = currentBlock.transactions.length - 1;
         const finalPosition = {
-          x: currentBlock.position.x - 1 + (txCountInBlock % 5) * 0.4,
+          x: currentBlock.position.x - 1.8 + (txCountInBlock % 5) * 0.9, // Centered in block
           y: currentBlock.position.y + 0.5 + Math.floor(txCountInBlock / 5) * 0.4,
-          z: currentBlock.position.z - 0.5 + Math.floor(txCountInBlock / 5) * 0.3
+          z: currentBlock.position.z // Ensure Z-axis alignment
         };
         
         // Scale down transaction for block
