@@ -18,7 +18,9 @@ package parallelpool
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -843,21 +845,100 @@ func (p *ParallelPool) prepareBatches() {
 
 // ExecuteBatch executes a batch of parallelizable transactions
 func (p *ParallelPool) ExecuteBatch(batch TxBatch) ([]common.Hash, error) {
+	if len(batch.Transactions) == 0 {
+		return nil, nil
+	}
+
 	// Track successfully executed transactions
 	executedTxs := make([]common.Hash, 0, len(batch.Transactions))
+	failedTxs := make(map[common.Hash]error)
 
-	// Group execution for parallelizable transactions
-	// In a real implementation, this would use concurrency primitives
+	log.Debug("Executing batch of parallel transactions",
+		"batchID", batch.BatchID,
+		"txCount", len(batch.Transactions))
+
+	// Create a channel for results
+	type txResult struct {
+		txHash common.Hash
+		err    error
+	}
+	resultCh := make(chan txResult, len(batch.Transactions))
+
+	// Use semaphore to limit concurrent executions if needed
+	sem := make(chan struct{}, runtime.NumCPU())
+
+	// Get current state to work with
+	header := p.chain.CurrentBlock()
+	stateDB, err := p.chain.StateAt(header.Root)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get state for batch execution: %v", err)
+	}
+
+	// Clone state for each transaction to isolate changes
 	for _, tx := range batch.Transactions {
-		// Process transaction (simplified - would need integration with EVM)
-		// This is a placeholder for actual execution logic
+		tx := tx // Capture variable for goroutine
 		txHash := tx.Hash()
 
-		// Record successful execution
-		executedTxs = append(executedTxs, txHash)
+		// Acquire semaphore slot
+		sem <- struct{}{}
 
-		// Remove from pool after execution
-		p.removeTx(txHash, true)
+		go func() {
+			defer func() { <-sem }() // Release semaphore slot
+
+			// Create an isolated state copy for this transaction
+			txStateDB := stateDB.Copy()
+
+			// Process transaction (would integrate with EVM in real implementation)
+			// For now, we simulate execution by retrieving sender and updating state
+			from, err := types.Sender(p.signer, tx)
+			if err != nil {
+				resultCh <- txResult{txHash, err}
+				return
+			}
+
+			// Apply transaction changes to state
+			// In a real implementation, this would involve running the transaction
+			// through the EVM and applying the resulting state changes
+			txStateDB.SetNonce(from, txStateDB.GetNonce(from)+1)
+
+			// Record success
+			resultCh <- txResult{txHash, nil}
+
+			log.Trace("Executed parallel transaction",
+				"hash", txHash.Hex(),
+				"from", from.Hex(),
+				"nonce", tx.Nonce())
+		}()
+	}
+
+	// Collect results
+	for i := 0; i < len(batch.Transactions); i++ {
+		result := <-resultCh
+		if result.err != nil {
+			failedTxs[result.txHash] = result.err
+		} else {
+			executedTxs = append(executedTxs, result.txHash)
+
+			// Remove successfully executed transaction from pool
+			p.removeTx(result.txHash, true)
+		}
+	}
+
+	// Update metrics
+	if metricsMeter := metrics.GetOrRegisterMeter("parallel/txpool/executed", nil); metricsMeter != nil {
+		metricsMeter.Mark(int64(len(executedTxs)))
+	}
+
+	// Log execution summary
+	if len(failedTxs) > 0 {
+		log.Debug("Batch execution completed with errors",
+			"batchID", batch.BatchID,
+			"successful", len(executedTxs),
+			"failed", len(failedTxs))
+	} else {
+		log.Debug("Batch execution completed successfully",
+			"batchID", batch.BatchID,
+			"txCount", len(executedTxs))
 	}
 
 	return executedTxs, nil
