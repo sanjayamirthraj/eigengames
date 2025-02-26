@@ -1,7 +1,26 @@
 import { ethers } from "ethers";
 
-const infuraWebSocketUrl = "wss://mainnet.infura.io/ws/v3/2f5d6db982034db29ae3fe106541e435";
+const infuraWebSocketUrl = "YOUR_INFURA_WEBSOCKET_URL";
+
+// For ethers v6, we use WebSocketProvider directly from ethers
 const provider = new ethers.WebSocketProvider(infuraWebSocketUrl);
+
+// Add error handling
+provider.on("error", (error) => {
+    console.error("WebSocket Error:", error);
+});
+
+// Test the connection
+async function testConnection() {
+    try {
+        const blockNumber = await provider.getBlockNumber();
+        console.log("Current block number:", blockNumber);
+    } catch (error) {
+        console.error("Connection error:", error);
+    }
+}
+
+testConnection();
 
 // Delay configuration
 const QUERY_DELAY_MS = 2000; // 2-second delay between querying for new transactions
