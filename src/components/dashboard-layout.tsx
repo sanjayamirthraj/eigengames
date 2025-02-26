@@ -45,7 +45,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-zinc-500 mb-4 md:mb-0">
-              © 2023 Ethereum Parallel Execution Dashboard
+              © 2025 Ethereum Parallel Execution Dashboard Made at Eigen Games
             </div>
             <div className="flex space-x-6">
               <a href="#" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">Documentation</a>
