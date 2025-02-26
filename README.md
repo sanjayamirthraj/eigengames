@@ -37,10 +37,6 @@ Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our impl
 
 Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks. We've developed two possible implementation paths:
 
-Our first approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types. This can directly be used on mainnet or any EVM compatible chain. 
-
-The second way that protocols can use our custom batching solution is through the creation of Alt L1s!
-
 We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
 
 ## The Batching Algorithm: The Heart of Our Innovation
@@ -96,6 +92,10 @@ Our implementation integrates with EigenLayer's AVS by:
 The AVS integration allows anyone to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities.
 
 # Implementation of Custom Batching
+
+Our first approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types. This can directly be used on mainnet or any EVM compatible chain. 
+
+The second way that protocols can use our custom batching solution is through the creation of Alt L1s!
 
 ### 1. Custom Client Implementation 
 
