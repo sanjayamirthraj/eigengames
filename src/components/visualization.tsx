@@ -31,7 +31,42 @@ const EthereumTransactionBatching = () => {
   const indivMempoolRef = useRef(null);
   const indivBlockRef = useRef(null);
 
-  // Initialize both Three.js scenes
+  // Add the highlight function near the top of the file, after imports but before component definition
+  const pulseHighlight = (obj: THREE.Object3D, duration = 500) => {
+    if (!obj) return;
+    
+    const material = (obj as THREE.Mesh).material as THREE.MeshStandardMaterial;
+    if (!material) return;
+    
+    const originalEmissive = material.emissive.clone();
+    const originalEmissiveIntensity = material.emissiveIntensity;
+    
+    const startTime = Date.now();
+    
+    function update() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Use sine wave for pulsing effect
+      const pulseIntensity = Math.sin(progress * Math.PI) * 0.5;
+      
+      // Set highlight color (bright green)
+      material.emissive.set(0x00ff00);
+      material.emissiveIntensity = pulseIntensity;
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        // Reset to original values
+        material.emissive.copy(originalEmissive);
+        material.emissiveIntensity = originalEmissiveIntensity;
+      }
+    }
+    
+    update();
+  };
+
+  // Initialize scene elements for batch processing
   const initThreeJs = () => {
     if (!batchMountRef.current || !individualMountRef.current || isInitialized) return;
     
@@ -811,9 +846,9 @@ const EthereumTransactionBatching = () => {
           new THREE.CatmullRomCurve3([
             new THREE.Vector3(tx.position.x, tx.position.y, tx.position.z),
             new THREE.Vector3((tx.position.x + currentBlock.position.x) * 0.5, 
-                             tx.position.y + 3, // Lower arc height for top-down view
-                             (tx.position.z + currentBlock.position.z) * 0.5),
-            new THREE.Vector3(currentBlock.position.x, currentBlock.position.y + 2, currentBlock.position.z)
+                     tx.position.y + 5, // Higher arc for better visibility
+                     (tx.position.z + currentBlock.position.z) * 0.5),
+            new THREE.Vector3(currentBlock.position.x, currentBlock.position.y, currentBlock.position.z) // End directly at block center
           ]),
           64, // path segments
           0.1, // tube radius
@@ -842,10 +877,12 @@ const EthereumTransactionBatching = () => {
         if (!indivBlockRef.current) continue;
         
         const txCountInBlock = currentBlock.transactions.length - 1; // Current position in block
+        const row = Math.floor(txCountInBlock / 3);
+        const col = txCountInBlock % 3;
         const finalPosition = {
-          x: currentBlock.position.x - 1 + (txCountInBlock % 5) * 0.4,
-          y: currentBlock.position.y + 0.5 + Math.floor(txCountInBlock / 5) * 0.4,
-          z: currentBlock.position.z - 0.5 + Math.floor(txCountInBlock / 5) * 0.3
+          x: currentBlock.position.x - 0.5 + col * 0.5, // Position within block width
+          y: currentBlock.position.y - 0.5 + row * 0.4, // Position below center to ensure inside
+          z: currentBlock.position.z  // Centered on z-axis
         };
         
         // Scale down transaction for block
@@ -864,38 +901,44 @@ const EthereumTransactionBatching = () => {
         };
         
         // Animate along the path
-        const pathAnimationDuration = 600;
-        const pathStartTime = Date.now();
+        const startTime = Date.now();
+        const duration = 1000; // Slower for more clarity
         
-        await new Promise(resolve => {
-          function updatePath() {
-            const elapsed = Date.now() - pathStartTime;
-            const progress = Math.min(elapsed / pathAnimationDuration, 1);
+        return new Promise(resolve => {
+          function update() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
             
             // Get position along the path
-            if (progress < 0.8) {
-              // First 80% of animation follows the path
-              const pathProgress = progress / 0.8;
+            if (progress < 0.7) {
+              // First 70% of animation follows the path
+              const pathProgress = progress / 0.7;
               const pathPos = getPathPosition(pathProgress);
               tx.position.set(pathPos.x, pathPos.y, pathPos.z);
             } else {
-              // Last 20% moves to final position
-              const finalProgress = (progress - 0.8) / 0.2;
+              // Last 30% moves to final position with easing
+              const finalProgress = (progress - 0.7) / 0.3;
+              
+              // Use easing function for smoother entry
+              const easedProgress = 1 - Math.pow(1 - finalProgress, 3); // Cubic ease out
+              
+              const finalPos = finalPosition;
               const pathPos = getPathPosition(1);
               
-              tx.position.x = pathPos.x + (finalPosition.x - pathPos.x) * finalProgress;
-              tx.position.y = pathPos.y + (finalPosition.y - pathPos.y) * finalProgress;
-              tx.position.z = pathPos.z + (finalPosition.z - pathPos.z) * finalProgress;
+              tx.position.x = pathPos.x + (finalPos.x - pathPos.x) * easedProgress;
+              tx.position.y = pathPos.y + (finalPos.y - pathPos.y) * easedProgress;
+              tx.position.z = pathPos.z + (finalPos.z - pathPos.z) * easedProgress;
             }
             
             if (progress < 1) {
-              requestAnimationFrame(updatePath);
+              requestAnimationFrame(update);
             } else {
+              // Remove the individual transaction highlight
               resolve();
             }
           }
           
-          updatePath();
+          update();
         });
         
         // Increment counter for statistics
@@ -1259,9 +1302,9 @@ const EthereumTransactionBatching = () => {
             new THREE.CatmullRomCurve3([
               new THREE.Vector3(batchContainer.position.x, batchContainer.position.y + 1.5, batchContainer.position.z),
               new THREE.Vector3((batchContainer.position.x + batchBlockRef.current.position.x) * 0.5, 
-                                batchContainer.position.y + 3, 
+                                batchContainer.position.y + 5, // Higher arc
                                 (batchContainer.position.z + batchBlockRef.current.position.z) * 0.5),
-              new THREE.Vector3(batchBlockRef.current.position.x, batchBlockRef.current.position.y + 2, batchBlockRef.current.position.z)
+              new THREE.Vector3(batchBlockRef.current.position.x, batchBlockRef.current.position.y, batchBlockRef.current.position.z) // End at block center
             ]),
             64, // path segments
             0.1, // tube radius
@@ -1272,7 +1315,7 @@ const EthereumTransactionBatching = () => {
           const pathMat = new THREE.MeshBasicMaterial({
             color: 0x22c55e,
             transparent: true,
-            opacity: 0,
+            opacity: 0.6,
           });
           
           const path = new THREE.Mesh(pathGeo, pathMat);
@@ -1310,17 +1353,16 @@ const EthereumTransactionBatching = () => {
           // Calculate final positions in blockchain block
           const finalPositions = [];
           for (let txIndex = 0; txIndex < batch.length; txIndex++) {
-            const rowCol = txIndex < 3 ? 
-              { row: 0, col: txIndex } : 
-              { row: 1, col: txIndex - 3 };
+            const row = Math.floor(txIndex / 3);
+            const col = txIndex % 3;
             
             if (!batchBlockRef.current) continue;
             
             const blockPos = batchBlockRef.current.position;
             finalPositions.push({
-              x: blockPos.x - 1 + rowCol.col * 0.8,
-              y: blockPos.y + 0.5 + rowCol.row * 0.4, // Flatter layout for top-down visibility
-              z: blockPos.z - 0.5 + rowCol.row * 0.5
+              x: blockPos.x - 0.5 + col * 0.5, // Position within block width
+              y: blockPos.y - 0.5 + row * 0.4, // Position below center to ensure inside
+              z: blockPos.z // Centered on z-axis
             });
           }
           
@@ -1350,7 +1392,7 @@ const EthereumTransactionBatching = () => {
               
               // Animate along the path
               const startTime = Date.now();
-              const duration = 800;
+              const duration = 1000; // Slower for more clarity
               
               return new Promise(resolve => {
                 function update() {
@@ -1358,25 +1400,30 @@ const EthereumTransactionBatching = () => {
                   const progress = Math.min(elapsed / duration, 1);
                   
                   // Get position along the path
-                  if (progress < 0.8) {
-                    // First 80% of animation follows the path
-                    const pathProgress = progress / 0.8;
+                  if (progress < 0.7) {
+                    // First 70% of animation follows the path
+                    const pathProgress = progress / 0.7;
                     const pathPos = getPathPosition(pathProgress);
                     tx.position.set(pathPos.x, pathPos.y, pathPos.z);
                   } else {
-                    // Last 20% moves to final position
-                    const finalProgress = (progress - 0.8) / 0.2;
+                    // Last 30% moves to final position with easing
+                    const finalProgress = (progress - 0.7) / 0.3;
+                    
+                    // Use easing function for smoother entry
+                    const easedProgress = 1 - Math.pow(1 - finalProgress, 3); // Cubic ease out
+                    
                     const finalPos = finalPositions[txIndex];
                     const pathPos = getPathPosition(1);
                     
-                    tx.position.x = pathPos.x + (finalPos.x - pathPos.x) * finalProgress;
-                    tx.position.y = pathPos.y + (finalPos.y - pathPos.y) * finalProgress;
-                    tx.position.z = pathPos.z + (finalPos.z - pathPos.z) * finalProgress;
+                    tx.position.x = pathPos.x + (finalPos.x - pathPos.x) * easedProgress;
+                    tx.position.y = pathPos.y + (finalPos.y - pathPos.y) * easedProgress;
+                    tx.position.z = pathPos.z + (finalPos.z - pathPos.z) * easedProgress;
                   }
                   
                   if (progress < 1) {
                     requestAnimationFrame(update);
                   } else {
+                    // Remove the individual transaction highlight
                     resolve();
                   }
                 }
@@ -1390,6 +1437,9 @@ const EthereumTransactionBatching = () => {
           
           // Wait for all transactions in this batch to move to blockchain
           await Promise.all(blockchainPromises);
+          
+          // Add a single pulse highlight for the whole batch
+          pulseHighlight(batchBlockRef.current);
           
           // Add a visual effect to show batch completion
           const completionFlash = new THREE.Mesh(

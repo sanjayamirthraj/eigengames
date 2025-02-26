@@ -219,6 +219,33 @@ The parallel transaction pool delivers several quantifiable performance enhancem
 3. **Resource Utilization Optimization**: Modern multi-core systems can efficiently allocate computational resources across concurrent transaction execution
 4. **Economic Efficiency**: Gas price prioritization ensures optimal allocation of limited block space to transactions with the highest economic value
 
+## Visualization of Parallel vs. Sequential Processing
+
+The project includes an interactive 3D visualization that illustrates the performance difference between sequential and parallel transaction processing. This visualization helps users understand the benefits of parallel execution through a clear, animated comparison.
+
+### Key Visualization Features
+
+1. **Transaction Positioning**: Transactions are visually represented as blocks that are processed inside larger blockchain blocks. The visualization clearly shows:
+   - Sequential transactions entering one at a time into a blockchain block
+   - Batch/parallel transactions being grouped and processed together in optimized batches
+
+2. **Visual Cues and Animation Effects**:
+   - Smooth path animations show transactions following a curved trajectory into blocks
+   - Easing functions create natural motion as transactions are processed
+   - Highlight effects pulse when transactions enter blocks, providing visual feedback
+   - Color coding differentiates between sequential and parallel processing modes
+
+3. **Camera Movements**:
+   - Dynamic camera angles follow the action, focusing on key parts of the process
+   - Transitions between processing stages help users follow the complete workflow
+
+4. **Performance Metrics Display**:
+   - Real-time counters show transactions processed
+   - Timer displays compare the speed difference between sequential and parallel methods
+   - Final statistics highlight the efficiency gains from parallel processing
+
+This visualization serves as both an educational tool and a demonstration of the performance improvements achievable with parallel transaction processing.
+
 ## Integration with Go-Ethereum Architecture
 
 The implementation integrates seamlessly with the existing Go-Ethereum codebase through these strategic modifications:
