@@ -5,24 +5,22 @@
 ## Table of Contents
 - [Introduction](#introduction)
 - [Implementation Overview](#implementation-overview)
-  - [1. Alternative Layer 1 (Alt-L1) Implementation](#1-alternative-layer-1-alt-l1-implementation)
+  - [1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain](#1-implementing-our-custom-algorithm-through-an-alternative-layer-1-alt-l1-implementation----eigenchain)
   - [2. Custom Client Implementation](#2-custom-client-implementation)
+- [Solution](#solution)
+  - [Quantitative Throughput Analysis](#quantitative-throughput-analysis)
 - [Custom Client Implementation Details](#custom-client-implementation-details)
   - [Core Components](#core-components)
   - [Key Architectural Elements](#key-architectural-elements)
-    - [1. Transaction Tagging System](#1-transaction-tagging-system)
-    - [2. The ParallelPool Architecture](#2-the-parallelpool-architecture)
-    - [3. Batch Processing System](#3-batch-processing-system)
-    - [4. Enhanced API for Parallel Transaction Management](#4-enhanced-api-for-parallel-transaction-management)
+    - [Transaction Tagging System](#1-transaction-tagging-system)
+    - [The ParallelPool Architecture](#2-the-parallelpool-architecture)
+    - [Batch Processing System](#3-batch-processing-system)
+    - [Enhanced API for Parallel Transaction Management](#4-enhanced-api-for-parallel-transaction-management)
   - [Transaction Processing Flow](#transaction-processing-flow)
-    - [Transaction Type Definition](#transaction-type-definition)
 - [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
 - [Performance Improvements](#performance-improvements)
-- [Visualization of Parallel vs. Sequential Processing](#visualization-of-parallel-vs-sequential-processing)
-  - [Key Visualization Features](#key-visualization-features)
-- [Performance Monitoring](#performance-monitoring)
+  - [Performance Monitoring](#performance-monitoring)
 - [Future Research Directions](#future-research-directions)
-- [Conclusion](#conclusion)
 
 ## Introduction
 
@@ -56,6 +54,33 @@ Our second approach involves creating a custom client implementation that works 
 
 More on the client:
 
+## Solution
+
+Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. By identifying which transactions can safely be executed in parallel without state conflicts, we can significantly increase overall throughput while preserving blockchain consistency.
+
+### Quantitative Throughput Analysis
+
+The goal of parallelization is to increase execution speed, translating into higher throughput for blockchain networks. This benefits users through reduced transaction fees and benefits proposers by enabling them to process more transactions per second. Proposers can afford to accept smaller fees per transaction while earning higher total fees due to the increased transaction volume.
+
+Our analysis indicates that the median sustainable number of parallel groups per block (containing 109 transactions) is 32. With this configuration, the degree of parallelization is approximately 109 / 32 ≈ 3.4. To quantify the throughput improvement, we model the total block time as the sum of block propagation time (p) and block computation time (c):
+
+```
+Total block time = p + c seconds
+```
+
+The throughput is given by:
+
+```
+Throughput = Block size / (p + c)
+```
+
+With computation reduced by a median factor of 3.4 through parallelization, the new throughput becomes:
+
+```
+New Throughput = Block size / (p + c/3.4)
+```
+
+Assuming a total block time of 12 seconds split evenly among p = c = 6 seconds, the new throughput improves from 9.08 to 14.04 transactions per second, representing a 1.54x increase. This substantial improvement demonstrates the real-world impact of our parallel transaction processing approach.
 
 ## Custom Client Implementation Details
 
@@ -72,7 +97,7 @@ Our implementation is spread across these main modules:
 
 ### Key Architectural Elements
 
-#### 1. Transaction Tagging System
+#### Transaction Tagging System
 
 We decided to use a simple but effective tagging system to identify which transactions can run in parallel:
 
@@ -86,7 +111,7 @@ const (
 
 Transactions get these tags prefixed to their data field, which makes them super easy to identify without having to do complex dependency analysis. This approach really simplifies parallelization while staying compatible with existing transaction processing.
 
-#### 2. The ParallelPool Architecture
+#### The ParallelPool Architecture
 
 The `ParallelPool` is the heart of our implementation. It:
 
@@ -97,7 +122,7 @@ The `ParallelPool` is the heart of our implementation. It:
 
 This design is pretty similar to resource management systems you'd find in distributed computing, where you need to maintain global state while still allowing some operations to happen concurrently.
 
-#### 3. Batch Processing System
+#### Batch Processing System
 
 We came up with a batch processing system that looks like this:
 
@@ -114,7 +139,7 @@ This structure groups compatible transactions that can be processed in parallel,
 - Assigns unique batch IDs so we can track and monitor them
 - Optimizes how batches are composed to maximize throughput
 
-#### 4. Enhanced API for Parallel Transaction Management
+#### Enhanced API for Parallel Transaction Management
 
 We've built a comprehensive API for working with parallel transactions:
 
@@ -259,54 +284,6 @@ Our parallel transaction pool delivers some significant performance improvements
 3. **Better Resource Usage**: Modern multi-core systems can efficiently distribute computational resources across concurrent transaction execution
 4. **Economic Efficiency**: Gas price prioritization ensures block space goes to the transactions with the highest economic value
 
-We added comprehensive metrics instrumentation so you can monitor how the parallel pool is performing:
-
-- Transaction throughput and queue depth monitoring
-- Batch size and composition tracking
-- Parallelizable transaction counts and ratios
-- Execution success rates and error tracking
-
-These metrics help you understand how things are working and optimize performance:
-
-```go
-// Metrics for the pending pool
-pendingParallelDiscardMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/discard", nil)
-pendingParallelReplaceMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/replace", nil)
-pendingParallelRateLimitMeter = metrics.NewRegisteredMeter("parallel/txpool/pending/ratelimit", nil) 
-pendingParallelNofundsMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/nofunds", nil)   
-
-// Metrics for the queued pool
-queuedParallelDiscardMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/discard", nil)
-queuedParallelReplaceMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/replace", nil)
-queuedParallelNofundsMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/nofunds", nil)
-queuedParallelRateLimitMeter = metrics.NewRegisteredMeter("parallel/txpool/queued/ratelimit", nil) 
-
-// General metrics
-knownParallelTxMeter       = metrics.NewRegisteredMeter("parallel/txpool/known", nil)
-validParallelTxMeter       = metrics.NewRegisteredMeter("parallel/txpool/valid", nil)
-invalidParallelTxMeter     = metrics.NewRegisteredMeter("parallel/txpool/invalid", nil)
-underpricedParallelTxMeter = metrics.NewRegisteredMeter("parallel/txpool/underpriced", nil)
-overflowParallelTxMeter    = metrics.NewRegisteredMeter("parallel/txpool/overflow", nil)
-
-pendingParallelGauge = metrics.NewRegisteredGauge("parallel/txpool/pending", nil)
-queuedParallelGauge  = metrics.NewRegisteredGauge("parallel/txpool/queued", nil)
-localParallelGauge   = metrics.NewRegisteredGauge("parallel/txpool/local", nil)
-slotsParallelGauge   = metrics.NewRegisteredGauge("parallel/txpool/slots", nil)
-
-// New batch metrics
-batchSizeGauge        = metrics.NewRegisteredGauge("parallel/txpool/batchsize", nil)
-batchCountGauge       = metrics.NewRegisteredGauge("parallel/txpool/batchcount", nil)
-parallelizableTxGauge = metrics.NewRegisteredGauge("parallel/txpool/parallelizable", nil)
-```
+### Performance Monitoring
 
 ## Future Research Directions
-
-There are several areas we'd like to explore further:
-
-1. **Smart Contract Interaction Analysis**: Better static analysis of contract interactions to predict transaction dependencies
-2. **Adaptive Batch Optimization**: Dynamic adjustment of batch sizes based on system load and transaction characteristics
-3. **Transaction Type Recognition**: Improved automatic classification of common transaction patterns
-4. **Cross-pool Coordination**: Enhanced communication between transaction pool implementations to maximize global throughput
-5. **Statistical Modeling**: Data-driven approaches to predict which transactions are likely to be parallelizable
-6. **Client-side Integration**: Simplified APIs for wallets and applications to leverage parallel transaction processing
-7. **EigenLayer-specific Optimizations**: Specialized mechanisms for AVS coordination and restaking-aware execution
