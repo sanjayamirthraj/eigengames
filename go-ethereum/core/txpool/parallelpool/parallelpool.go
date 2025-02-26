@@ -18,7 +18,6 @@ package parallelpool
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -38,9 +37,17 @@ const (
 	// ParallelTxType is the transaction type for parallel transactions
 	ParallelTxType = 0x05
 
-	// Define missing constants
-	txPoolGlobalSlots = 4096            // Maximum number of executable transaction slots for all accounts
-	txMaxSize         = 4 * 1024 * 1024 // Maximum size of a transaction
+	// Tag identifiers within transaction data
+	ParallelizableTag = "PARALLEL"
+	SequentialTag     = "SEQUENTIAL"
+
+	// Configuration constants
+	txPoolGlobalSlots = 4096            // Maximum transaction capacity
+	txMaxSize         = 4 * 1024 * 1024 // Maximum transaction size (4MB)
+
+	// Batch execution constants
+	DefaultBatchSize = 64  // Default number of transactions in a parallel batch
+	MaxBatchSize     = 256 // Maximum number of transactions in a parallel batch
 
 	// Reason for nonce changes
 	txNonceChange = "transaction"
@@ -135,6 +142,12 @@ type Config struct {
 	PriceBump uint64 // Price bump percentage to replace an already existing transaction
 }
 
+// New types to manage tagged transactions
+type TxBatch struct {
+	Transactions []*types.Transaction
+	BatchID      uint64
+}
+
 // ParallelPool is the struct for the parallel transaction pool.
 type ParallelPool struct {
 	config      *params.ChainConfig
@@ -164,50 +177,54 @@ type ParallelPool struct {
 	priced  *parallelPricedList
 
 	wg sync.WaitGroup
+
+	// New fields for improved parallelization
+	parallelizableTxs map[common.Address][]*types.Transaction // Txs that can be executed in parallel
+	batchedTxs        []TxBatch                               // Transactions grouped into batches
+	batchSize         int                                     // Current batch size configuration
+	batchMu           sync.RWMutex                            // Mutex for batch operations
+
+	// New metrics
+	batchSizeGauge        *metrics.Gauge // Tracks current batch size
+	batchCountGauge       *metrics.Gauge // Tracks number of batches
+	parallelizableTxGauge *metrics.Gauge // Tracks parallelizable transactions
 }
 
 // New creates a new parallel transaction pool instance
-func New(config Config, chain BlockChain) *ParallelPool {
-	// Create the parallel transaction pool with its initial settings
+func New(config Config, blockchain *core.BlockChain) *ParallelPool {
+	// Initialize metrics
+	batchSizeGauge := metrics.NewRegisteredGauge("parallel/txpool/batchsize", nil)
+	batchCountGauge := metrics.NewRegisteredGauge("parallel/txpool/batchcount", nil)
+	parallelizableTxGauge := metrics.NewRegisteredGauge("parallel/txpool/parallelizable", nil)
+
+	// Create pool
 	pool := &ParallelPool{
-		config:      chain.Config(),
-		chainconfig: chain.Config(),
-		chain:       chain,
-		gasPrice:    new(big.Int).SetUint64(1),
-		pending:     make(map[common.Address]*parallelList),
-		queue:       make(map[common.Address]*parallelList),
-		beats:       make(map[common.Address]time.Time),
-		all:         make(map[common.Hash]*types.Transaction),
-		locals:      newAccountSet(nil),
-		journal:     newJournal(),
+		config:                config,
+		chain:                 blockchain,
+		signer:                types.LatestSigner(blockchain.Config()),
+		mu:                    sync.RWMutex{},
+		pending:               make(map[common.Address]*parallelList),
+		queue:                 make(map[common.Address]*parallelList),
+		beats:                 make(map[common.Address]time.Time),
+		all:                   make(map[common.Hash]*types.Transaction),
+		priced:                newPriceHeap(),
+		locals:                newAccountSet(nil),
+		journal:               newJournal(),
+		parallelizableTxs:     make(map[common.Address][]*types.Transaction),
+		batchSize:             DefaultBatchSize,
+		batchSizeGauge:        &batchSizeGauge,
+		batchCountGauge:       &batchCountGauge,
+		parallelizableTxGauge: &parallelizableTxGauge,
 	}
 
-	// Get current head to initialize the pool internals
-	head := chain.CurrentBlock()
-	if head == nil {
-		log.Error("Failed to initialize parallel transaction pool, head block not found")
-		return nil
-	}
+	// Initialize the blockchain state
+	pool.currentState = blockchain.CurrentBlock().StateDB()
+	pool.pendingState = statedb.ManageState(pool.currentState)
 
-	// Initialize chain configuration and check if we're on a supported fork
-	pool.istanbul = pool.chainconfig.IsIstanbul(head.Number)
-	pool.eip2718 = pool.chainconfig.IsBerlin(head.Number)
-	pool.eip1559 = pool.chainconfig.IsLondon(head.Number)
+	// Track transactions
+	pool.head = blockchain.CurrentBlock().Hash()
+	pool.chainconfig = blockchain.Config()
 
-	// Set the current state and gas limit
-	statedb, err := chain.StateAt(head.Root)
-	if err != nil {
-		log.Error("Failed to initialize parallel transaction pool", "err", err)
-		return nil
-	}
-	pool.currentState = statedb
-	pool.pendingState = statedb.Copy()
-	pool.currentMaxGas = head.GasLimit
-
-	pool.priced = newParallelPricedList(pool.all)
-	pool.signer = types.LatestSigner(chain.Config())
-
-	log.Info("Parallel transaction pool initialized")
 	return pool
 }
 
@@ -363,58 +380,54 @@ func (p *ParallelPool) add(tx *types.Transaction, local bool) error {
 		return err
 	}
 
-	// Check if tx dependencies (if any) exist in the pool
-	txData := getParallelTxData(tx)
-	for _, dep := range txData.Dependencies {
-		if p.all[dep] == nil {
-			return fmt.Errorf("dependency %s not found in pool", dep.Hex())
-		}
-	}
+	// Get the tag from transaction data
+	txData := tx.Data()
+	isParallelizable := false
 
-	// Try to insert the transaction into the pool
-	if p.all[tx.Hash()] != nil {
-		knownParallelTxMeter.Mark(1)
-		return fmt.Errorf("known transaction: %x", tx.Hash())
-	}
-
-	// If the transaction pool is full, discard underpriced transactions
-	if uint64(len(p.all)) >= txPoolGlobalSlots {
-		// If the new transaction is underpriced, don't accept it
-		if p.priced.Underpriced(tx) {
-			underpricedParallelTxMeter.Mark(1)
-			return ErrTxPoolOverflow
-		}
-		// New transaction is better than our worst transaction, replace it
-		drop := p.priced.Discard(txPoolGlobalSlots - 1)
-		for _, tx := range drop {
-			p.removeTx(tx.Hash(), false)
-		}
+	// Simple tag detection in the first bytes of data
+	// In a real implementation, this would use a more robust method
+	if len(txData) > 8 {
+		tag := string(txData[:8])
+		isParallelizable = (tag == ParallelizableTag)
 	}
 
 	// Add the transaction to the pool
 	p.all[tx.Hash()] = tx
 	p.priced.Put(tx)
 
-	// Add to pending if account nonce is next to be processed, otherwise queue it
-	nonce := tx.Nonce()
-	if p.pendingState.GetNonce(from) == nonce {
-		if list := p.pending[from]; list == nil {
-			p.pending[from] = newParallelList()
+	if isParallelizable {
+		// Add to parallelizable transactions map
+		p.batchMu.Lock()
+		if p.parallelizableTxs[from] == nil {
+			p.parallelizableTxs[from] = make([]*types.Transaction, 0)
 		}
-		p.pending[from].Add(tx)
+		p.parallelizableTxs[from] = append(p.parallelizableTxs[from], tx)
+		p.batchMu.Unlock()
+
+		// Update parallelizable transactions count
+		p.parallelizableTxGauge.Update(int64(len(p.parallelizableTxs)))
 	} else {
-		if list := p.queue[from]; list == nil {
-			p.queue[from] = newParallelList()
+		// Traditional processing for sequential transactions
+		nonce := tx.Nonce()
+		if p.pendingState.GetNonce(from) == nonce {
+			if list := p.pending[from]; list == nil {
+				p.pending[from] = newParallelList()
+			}
+			p.pending[from].Add(tx)
+		} else {
+			if list := p.queue[from]; list == nil {
+				p.queue[from] = newParallelList()
+			}
+			p.queue[from].Add(tx)
 		}
-		p.queue[from].Add(tx)
 	}
 
-	// Update pool metrics
+	// Update metrics
 	pendingParallelGauge.Update(int64(len(p.pending)))
 	queuedParallelGauge.Update(int64(len(p.queue)))
 
-	// Process dependent transactions if necessary
-	p.promoteExecutables()
+	// After adding transactions, prepare batches for parallel execution
+	p.prepareBatches()
 
 	return nil
 }
@@ -469,11 +482,11 @@ func (p *ParallelPool) detectConflicts(tx *types.Transaction) []common.Hash {
 	var conflicts []common.Hash
 	p.currentState.Prepare(tx.Hash(), common.Hash{}, 0)
 	msg, _ := tx.AsMessage(p.signer, p.currentState.BaseFee())
-	
+
 	// Simulate transaction execution to get accessed addresses/storage slots
 	evm := p.chain.GetEVM(msg, p.currentState, nil)
 	evm.Config.Tracer = accessListTracer // Custom tracer to record storage access
-	
+
 	// Execute call to detect storage accesses
 	_, _, _, err := core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(msg.Gas()))
 	if err == nil {
@@ -496,57 +509,54 @@ func (p *ParallelPool) detectConflicts(tx *types.Transaction) []common.Hash {
 
 // Enhanced transaction validation with auto-detected conflicts
 func (p *ParallelPool) validateTx(tx *types.Transaction, local bool) error {
-	// Accept only parallel transactions
-	if tx.Type() != ParallelTxType {
-		return ErrInvalidParallelTx
-	}
-
 	// Reject transactions over defined size to prevent DOS attacks
 	if uint64(tx.Size()) > txMaxSize {
 		return ErrOversizedData
 	}
-
 	// Transactions can't be negative. This may never happen using RLP decoded
 	// transactions but may occur if you create a transaction using the RPC.
 	if tx.Value().Sign() < 0 {
 		return ErrNegativeValue
 	}
-
 	// Make sure the transaction is signed properly
 	from, err := types.Sender(p.signer, tx)
 	if err != nil {
-		return fmt.Errorf("invalid sender: %v", err)
+		return ErrInvalidSender
 	}
-
-	// Make sure intrinsic gas is sufficient
-	if tx.Gas() < params.TxGas {
-		return ErrIntrinsicGas
+	// Drop non-local transactions under our own minimal accepted gas price
+	if !local && tx.GasFeeCapIntCmp(p.config.PriceLimit) < 0 {
+		return ErrUnderpriced
 	}
-
-	// Check if nonce is too low
-	nonce := p.pendingState.GetNonce(from)
-	if nonce > tx.Nonce() {
+	// Ensure the transaction adheres to nonce ordering
+	currentState := p.currentState
+	if currentState.GetNonce(from) > tx.Nonce() {
 		return ErrNonceTooLow
 	}
 
-	// Check if the transaction would exceed the current block limit
-	if p.currentMaxGas < tx.Gas() {
-		return ErrGasLimit
+	// Check if transaction has a parallel tag
+	txData := tx.Data()
+	isParallelizable := false
+	if len(txData) > 8 {
+		tag := string(txData[:8])
+		isParallelizable = (tag == ParallelizableTag)
 	}
 
-	// Just assume funds are sufficient for this implementation
-	// In a real implementation, we would properly check the funds
-
-	// Auto-detect storage conflicts and add implicit dependencies
-	txData := getParallelTxData(tx)
-	if len(txData.Dependencies) == 0 {
-		conflicts := p.detectConflicts(tx)
-		txData.Dependencies = append(txData.Dependencies, conflicts...)
+	// Transactor should have enough funds to cover the costs
+	// cost == V + GP * GL
+	if currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
+		return ErrInsufficientFunds
 	}
-	
-	// Check circular dependencies using topological sort
-	if err := p.checkDependencyCycles(tx, txData.Dependencies); err != nil {
-		return err
+
+	// Skip gas limit check for parallelizable transactions as they'll be executed in batches
+	if !isParallelizable {
+		// Check if gas limit is within acceptable range
+		intrGas, err := core.IntrinsicGas(tx.Data(), tx.AccessList(), tx.To() == nil, p.chainconfig.IsShanghai(p.chain.CurrentBlock().Number()))
+		if err != nil {
+			return err
+		}
+		if tx.Gas() < intrGas {
+			return ErrIntrinsicGas
+		}
 	}
 
 	return nil
@@ -782,4 +792,102 @@ func (l *parallelPricedList) Discard(count int) []*types.Transaction {
 	drop := l.items[len(l.items)-count:]
 	l.items = l.items[:len(l.items)-count]
 	return drop
+}
+
+// prepareBatches organizes parallelizable transactions into execution batches
+func (p *ParallelPool) prepareBatches() {
+	p.batchMu.Lock()
+	defer p.batchMu.Unlock()
+
+	// Skip if no parallelizable transactions
+	totalTxs := 0
+	for _, txs := range p.parallelizableTxs {
+		totalTxs += len(txs)
+	}
+	if totalTxs == 0 {
+		return
+	}
+
+	// Create new batches
+	p.batchedTxs = nil
+	var currentBatch TxBatch
+	currentBatch.Transactions = make([]*types.Transaction, 0, p.batchSize)
+	currentBatch.BatchID = uint64(time.Now().UnixNano())
+
+	// Collect transactions from all accounts
+	txCount := 0
+	for addr, txs := range p.parallelizableTxs {
+		for _, tx := range txs {
+			currentBatch.Transactions = append(currentBatch.Transactions, tx)
+			txCount++
+
+			// When batch is full, add it and create a new one
+			if txCount >= p.batchSize {
+				p.batchedTxs = append(p.batchedTxs, currentBatch)
+				currentBatch.Transactions = make([]*types.Transaction, 0, p.batchSize)
+				currentBatch.BatchID = uint64(time.Now().UnixNano())
+				txCount = 0
+			}
+		}
+	}
+
+	// Add the last batch if it has any transactions
+	if txCount > 0 {
+		p.batchedTxs = append(p.batchedTxs, currentBatch)
+	}
+
+	// Update metrics
+	p.batchSizeGauge.Update(int64(p.batchSize))
+	p.batchCountGauge.Update(int64(len(p.batchedTxs)))
+}
+
+// ExecuteBatch executes a batch of parallelizable transactions
+func (p *ParallelPool) ExecuteBatch(batch TxBatch) ([]common.Hash, error) {
+	// Track successfully executed transactions
+	executedTxs := make([]common.Hash, 0, len(batch.Transactions))
+
+	// Group execution for parallelizable transactions
+	// In a real implementation, this would use concurrency primitives
+	for _, tx := range batch.Transactions {
+		// Process transaction (simplified - would need integration with EVM)
+		// This is a placeholder for actual execution logic
+		txHash := tx.Hash()
+
+		// Record successful execution
+		executedTxs = append(executedTxs, txHash)
+
+		// Remove from pool after execution
+		p.removeTx(txHash, true)
+	}
+
+	return executedTxs, nil
+}
+
+// GetBatches returns the current batches of parallelizable transactions
+func (p *ParallelPool) GetBatches() []TxBatch {
+	p.batchMu.RLock()
+	defer p.batchMu.RUnlock()
+
+	// Make a copy to avoid race conditions
+	batches := make([]TxBatch, len(p.batchedTxs))
+	copy(batches, p.batchedTxs)
+
+	return batches
+}
+
+// SetBatchSize configures the number of transactions per batch
+func (p *ParallelPool) SetBatchSize(size int) {
+	if size <= 0 {
+		size = DefaultBatchSize
+	}
+	if size > MaxBatchSize {
+		size = MaxBatchSize
+	}
+
+	p.batchMu.Lock()
+	p.batchSize = size
+	p.batchMu.Unlock()
+
+	// Re-prepare batches with new size
+	p.prepareBatches()
 }

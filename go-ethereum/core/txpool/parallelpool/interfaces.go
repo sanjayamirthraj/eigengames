@@ -80,3 +80,48 @@ func (t *txLookup) Remove(hash common.Hash) {
 
 	delete(t.all, hash)
 }
+
+// ParallelAPI provides an API for submitting transactions with parallelization tags
+type ParallelAPI interface {
+	// SubmitParallelTx submits a transaction with parallelization tag
+	SubmitParallelTx(tx *types.Transaction) (common.Hash, error)
+
+	// ExecuteBatches executes all available batches of parallelizable transactions
+	ExecuteBatches() ([]common.Hash, error)
+
+	// GetBatchStats returns statistics about current batches
+	GetBatchStats() (batchCount int, txCount int, batchSize int)
+
+	// SetBatchSize configures the size of transaction batches
+	SetBatchSize(size int) error
+}
+
+// ParallelTagsGenerator creates transaction tags based on their properties
+type ParallelTagsGenerator interface {
+	// TagAsParallelizable marks a transaction as parallelizable
+	TagAsParallelizable(tx *types.Transaction) (*types.Transaction, error)
+
+	// TagAsSequential marks a transaction as requiring sequential execution
+	TagAsSequential(tx *types.Transaction) (*types.Transaction, error)
+
+	// IsParallelizable checks if a transaction is tagged as parallelizable
+	IsParallelizable(tx *types.Transaction) bool
+}
+
+// ParallelExecutor provides an interface for executing batches of transactions in parallel
+type ParallelExecutor interface {
+	// ExecuteBatch executes a batch of transactions in parallel
+	ExecuteBatch(txs []*types.Transaction) ([]common.Hash, error)
+
+	// EstimateParallelGas estimates the gas usage for a batch of parallel transactions
+	EstimateParallelGas(txs []*types.Transaction) (uint64, error)
+}
+
+// ParallelStateFetcher provides an interface for fetching state for parallel execution
+type ParallelStateFetcher interface {
+	// FinalState returns the final state after executing all transactions
+	FinalState() (common.Hash, error)
+
+	// GetBatchState returns the state after executing a specific batch
+	GetBatchState(batchID uint64) (common.Hash, error)
+}
