@@ -82,43 +82,43 @@ let sequentialGroup = [];
 let lastProcessedTime = null;
 let processingStatus = "idle";
 
-// // Generate a mock transaction if no real ones are available
-// function generateMockTransaction() {
-//     const id = Math.random().toString(36).substring(2, 15);
-//     return {
-//         hash: `0x${id}${Math.random().toString(36).substring(2, 15)}`,
-//         from: `0x${Math.random().toString(36).substring(2, 42)}`,
-//         to: `0x${Math.random().toString(36).substring(2, 42)}`,
-//         value: ethers.parseEther((Math.random() * 10).toFixed(4)),
-//         gasPrice: ethers.parseUnits((Math.random() * 100).toFixed(2), "gwei"),
-//         data: `0x${Math.random().toString(36).substring(2, 42)}`,
-//         state: Math.floor(Math.random() * 5) // 0-4 for different states
-//     };
-// }
+// Generate a mock transaction if no real ones are available
+function generateMockTransaction() {
+    const id = Math.random().toString(36).substring(2, 15);
+    return {
+        hash: `0x${id}${Math.random().toString(36).substring(2, 15)}`,
+        from: `0x${Math.random().toString(36).substring(2, 42)}`,
+        to: `0x${Math.random().toString(36).substring(2, 42)}`,
+        value: ethers.parseEther((Math.random() * 10).toFixed(4)),
+        gasPrice: ethers.parseUnits((Math.random() * 100).toFixed(2), "gwei"),
+        data: `0x${Math.random().toString(36).substring(2, 42)}`,
+        state: Math.floor(Math.random() * 5) // 0-4 for different states
+    };
+}
 
-// // Create mock access list for a transaction
-// function generateMockAccessList(txHash) {
-//     const accessListLength = Math.floor(Math.random() * 5) + 1;
-//     const accessList = [];
+// Create mock access list for a transaction
+function generateMockAccessList(txHash) {
+    const accessListLength = Math.floor(Math.random() * 5) + 1;
+    const accessList = [];
     
-//     for (let i = 0; i < accessListLength; i++) {
-//         const address = `0x${Math.random().toString(36).substring(2, 42)}`;
-//         const storageKeysLength = Math.floor(Math.random() * 3) + 1;
-//         const storageKeys = [];
+    for (let i = 0; i < accessListLength; i++) {
+        const address = `0x${Math.random().toString(36).substring(2, 42)}`;
+        const storageKeysLength = Math.floor(Math.random() * 3) + 1;
+        const storageKeys = [];
         
-//         for (let j = 0; j < storageKeysLength; j++) {
-//             storageKeys.push(`0x${Math.random().toString(36).substring(2, 66)}`);
-//         }
+        for (let j = 0; j < storageKeysLength; j++) {
+            storageKeys.push(`0x${Math.random().toString(36).substring(2, 66)}`);
+        }
         
-//         accessList.push({
-//             address,
-//             storageKeys
-//         });
-//     }
+        accessList.push({
+            address,
+            storageKeys
+        });
+    }
     
-//     accessListMap.set(txHash, accessList);
-//     return accessList;
-// }
+    accessListMap.set(txHash, accessList);
+    return accessList;
+}
 
 // Ensure we have some data for visualization
 function ensureTransactionsAvailable() {
@@ -163,8 +163,8 @@ async function generateAccessList(tx) {
     } catch (error) {
         console.error("Error generating access list:", error);
         // Fallback to mock access list if real one fails
-        // generateMockAccessList(tx.hash);
-        // transactionQueue.push(tx.hash);
+        generateMockAccessList(tx.hash);
+        transactionQueue.push(tx.hash);
         
         if (!isProcessing) {
             processTransactionQueue();
