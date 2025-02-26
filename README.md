@@ -25,6 +25,9 @@
 
 ## Introduction
 
+"Ethereum is a state machine, and the EVM executes transactions sequentially, one by one. It doesn’t execute other transactions until the execution of the current transaction is completed and the resulting state is computed. This is to avoid state/storage collisions and preserve atomicity of transactions. In other words, this ensures that each transaction is a self-contained, atomic unit of operation that changes the system’s state without interference from or interference to any other concurrent transactions. The execution, however, is still sequential, even with a set of completely independent transactions, because the EVM isn’t designed to be able to execute them at the same time."
+-- Souradeep Das
+
 The system uses a state access batching algorithm to figure out which transactions can be processed simultaneously and which ones need to wait. It's similar to how web servers handle multiple requests concurrently while making sure related operations still happen in the right sequence.
 
 Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks. We've developed two possible implementation paths:
