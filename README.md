@@ -1,4 +1,4 @@
-# Further changes -- Implementing Parallel Transaction Processing for EigenLayer AVS
+# Implementing Parallel Transaction Processing for EigenLayer AVS
 
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
