@@ -23,6 +23,22 @@ let historicalSequentialGroup = [];
 const app = express();
 const PORT = 3000;
 
+// Add CORS middleware to allow requests from the frontend
+app.use((req, res, next) => {
+  // Allow requests from any origin during development
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  
+  // Handle OPTIONS preflight requests explicitly
+  if (req.method === 'OPTIONS') {
+    // Send 204 No Content for OPTIONS requests
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // Endpoint to query the current status of the lists
 app.get("/status", (req, res) => {
     res.json({

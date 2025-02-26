@@ -1,5 +1,5 @@
 // API client for communicating with the operator server
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://localhost:3000'; // Ensure this matches the backend port
 
 export interface AccessList {
   address: string;
@@ -74,6 +74,15 @@ export interface SimulationResults {
   sequential: {
     [groupIndex: string]: SimulationResult;
   };
+}
+
+// Updated interface for the new blocks endpoint
+export interface BlocksResponse {
+  blocks: {
+    type: 'parallelizable' | 'sequential';
+    groupId: number;
+    transactions: string[];
+  }[];
 }
 
 // API client functions
@@ -167,5 +176,27 @@ export const api = {
       body: JSON.stringify({ count }),
     });
     return response.json();
+  },
+
+  // New function to get blocks from the updated backend
+  getBlocks: async (): Promise<BlocksResponse> => {
+    console.log("API: Fetching blocks from", `${API_URL}/blocks`);
+    try {
+      const response = await fetch(`${API_URL}/blocks`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch blocks: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log("API: Received blocks data:", data);
+      return data;
+    } catch (error) {
+      console.error("API: Error fetching blocks:", error);
+      throw error;
+    }
+  },
+
+  // Test function to directly fetch blocks - useful for debugging
+  testFetchBlocks: async (): Promise<Response> => {
+    return fetch(`${API_URL}/blocks`);
   },
 }; 

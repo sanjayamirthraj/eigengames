@@ -40,7 +40,7 @@ const BlockParallelization = ({ blocks }: ParallelBlockProps) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Most Optimal Parallelizable Block Options</h2>
+        <h2 className="text-2xl font-bold text-black">Most Optimal Parallelizable Block Options</h2>
         <Button 
           variant="outline"
           onClick={handleRefresh}

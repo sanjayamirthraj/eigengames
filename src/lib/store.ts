@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { BlockBatch } from '@/types/block';
 import { Transaction } from '@/types/transaction';
+import { api } from './api';
 
 // Generate a new block with random transactions
 const generateNewBlock = (): BlockBatch => {
@@ -59,6 +60,8 @@ interface BlockStore {
   simulationInterval: number | null;
   simulationSpeed: number; // Speed in milliseconds
   lastUpdated: Date;
+  loading: boolean;
+  error: string | null;
   
   // Actions
   addNewBlock: () => void;
@@ -66,7 +69,13 @@ interface BlockStore {
   stopSimulation: () => void;
   resetBlocks: () => void;
   setSimulationSpeed: (speed: number) => void;
+  fetchBlocksFromAPI: () => Promise<void>;
 }
+
+// Generate a simple random value between min and max
+const randomValue = (min: number, max: number) => {
+  return (Math.random() * (max - min) + min).toFixed(3);
+};
 
 export const useBlockStore = create<BlockStore>((set, get) => ({
   blocks: generateInitialBlocks(),
@@ -75,21 +84,70 @@ export const useBlockStore = create<BlockStore>((set, get) => ({
   simulationInterval: null,
   simulationSpeed: 5000, // Default: 5 seconds
   lastUpdated: new Date(),
+  loading: false,
+  error: null,
+  
+  // Fetch blocks from the API
+  fetchBlocksFromAPI: async () => {
+    try {
+      set({ loading: true, error: null });
+      
+      const data = await api.getBlocks();
+      console.log("Fetched data from API:", data); // Log the data for debugging
+      
+      if (!data || !data.blocks || !Array.isArray(data.blocks)) {
+        throw new Error('Invalid data format received from the API');
+      }
+      
+      // Convert the API response to our BlockBatch format
+      const convertedBlocks: BlockBatch[] = data.blocks.map(block => {
+        const isSequential = block.type === 'sequential';
+        const txCount = block.transactions.length;
+        
+        return {
+          id: `#${block.groupId}`,
+          transactions: txCount,
+          totalFees: randomValue(0.1, 0.6), // Generate random fees since API doesn't provide this
+          expectedMEV: randomValue(0.05, 0.35), // Generate random MEV since API doesn't provide this
+          isSequential: isSequential,
+          sequentialCount: isSequential ? txCount : 0, // In sequential blocks, all txs are sequential
+          timestamp: new Date().toISOString()
+        };
+      });
+      
+      console.log("Converted blocks:", convertedBlocks); // Log the converted blocks
+      
+      set({
+        blocks: convertedBlocks,
+        lastUpdated: new Date(),
+        loading: false
+      });
+    } catch (error) {
+      console.error('Error fetching blocks from API:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch blocks', 
+        loading: false 
+      });
+    }
+  },
   
   addNewBlock: () => {
-    const newBlock = generateNewBlock();
-    const newTransactions = generateTransactionsForBlock(newBlock.transactions);
-    
-    // Assign block ID to transactions
-    newTransactions.forEach(tx => {
-      tx.blockId = newBlock.id;
+    // Try to fetch from API first, fallback to generating if it fails
+    get().fetchBlocksFromAPI().catch(() => {
+      const newBlock = generateNewBlock();
+      const newTransactions = generateTransactionsForBlock(newBlock.transactions);
+      
+      // Assign block ID to transactions
+      newTransactions.forEach(tx => {
+        tx.blockId = newBlock.id;
+      });
+      
+      set(state => ({
+        blocks: [newBlock, ...state.blocks.slice(0, 9)], // Keep only the 10 most recent blocks
+        currentTransactions: newTransactions,
+        lastUpdated: new Date() // Update timestamp
+      }));
     });
-    
-    set(state => ({
-      blocks: [newBlock, ...state.blocks.slice(0, 9)], // Keep only the 10 most recent blocks
-      currentTransactions: newTransactions,
-      lastUpdated: new Date() // Update timestamp
-    }));
   },
   
   startSimulation: (intervalMs?: number) => {
