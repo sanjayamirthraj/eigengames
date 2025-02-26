@@ -36,19 +36,6 @@ Our solution solves parallel execution by intelligently batching transactions fr
 
 We have the brains of the operation with our custom algorithms, and we look to speed up ETH 
 
-### 1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
-
-Our first approach involves creating a complete alternative Layer 1 blockchain that natively supports parallel transaction execution. This implementation:
-
-- Uses custom consensus mechanisms optimized for parallel processing
-- Incorporates parallel execution directly into the block production pipeline
-- Features native support for transaction dependency analysis and grouping
-- Provides built-in mempool organization for efficient batching
-- Includes specialized validator logic to ensure consistency across parallel executions
-
-The Alt-L1 approach gives us complete freedom to optimize the entire blockchain stack for parallelism, from transaction submission to block production and validation.
-
-### 2. Custom Client Implementation 
 
 Our second approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types
 
@@ -81,6 +68,21 @@ New Throughput = Block size / (p + c/3.4)
 ```
 
 Assuming a total block time of 12 seconds split evenly among p = c = 6 seconds, the new throughput improves from 9.08 to 14.04 transactions per second, representing a 1.54x increase. This substantial improvement demonstrates the real-world impact of our parallel transaction processing approach.
+
+
+### 1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
+
+Our first approach involves creating a complete alternative Layer 1 blockchain that natively supports parallel transaction execution. This implementation:
+
+- Uses custom consensus mechanisms optimized for parallel processing
+- Incorporates parallel execution directly into the block production pipeline
+- Features native support for transaction dependency analysis and grouping
+- Provides built-in mempool organization for efficient batching
+- Includes specialized validator logic to ensure consistency across parallel executions
+
+The Alt-L1 approach gives us complete freedom to optimize the entire blockchain stack for parallelism, from transaction submission to block production and validation.
+
+### 2. Custom Client Implementation 
 
 ## Custom Client Implementation Details
 
