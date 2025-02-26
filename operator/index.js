@@ -2,14 +2,15 @@ import { ethers } from "ethers";
 
 const infuraWebSocketUrl = "wss://mainnet.infura.io/ws/v3/2f5d6db982034db29ae3fe106541e435";
 
+// For ethers v6, we use WebSocketProvider directly from ethers
 const provider = new ethers.WebSocketProvider(infuraWebSocketUrl);
 
-
+// Add error handling
 provider.on("error", (error) => {
     console.error("WebSocket Error:", error);
 });
 
-
+// Test the connection
 async function testConnection() {
     try {
         const blockNumber = await provider.getBlockNumber();
@@ -21,6 +22,7 @@ async function testConnection() {
 
 testConnection();
 
+// Delay configuration
 const QUERY_DELAY_MS = 2000; // 2-second delay between querying for new transactions
 const CLEANUP_INTERVAL_MS = 200000; // 200-second interval to clean groups
 const SIMULATION_TIME_MS = 1000; // Time to simulate each transaction (1 second)
@@ -28,6 +30,7 @@ let isProcessing = false; // Flag to prevent overlapping processing
 
 const transactionQueue = [];
 const accessListMap = new Map();
+// Track simulation status
 const simulatedTransactions = new Set();
 
 const MAX_PARALLELIZABLE_GROUPS = 5; // Maximum number of parallelizable groups

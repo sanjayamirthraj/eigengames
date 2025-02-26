@@ -904,7 +904,7 @@ const EthereumTransactionBatching = () => {
         const startTime = Date.now();
         const duration = 1000; // Slower for more clarity
         
-        await new Promise(resolve => {
+        return new Promise(resolve => {
           function update() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
@@ -1395,7 +1395,7 @@ const EthereumTransactionBatching = () => {
               const startTime = Date.now();
               const duration = 1000; // Slower for more clarity
               
-              await new Promise(resolve => {
+              return new Promise(resolve => {
                 function update() {
                   const elapsed = Date.now() - startTime;
                   const progress = Math.min(elapsed / duration, 1);
