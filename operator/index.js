@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-const infuraWebSocketUrl = "YOUR_INFURA_WEBSOCKET_URL";
+const infuraWebSocketUrl = "wss://mainnet.infura.io/ws/v3/2f5d6db982034db29ae3fe106541e435";
 
 // For ethers v6, we use WebSocketProvider directly from ethers
 const provider = new ethers.WebSocketProvider(infuraWebSocketUrl);
@@ -25,11 +25,13 @@ testConnection();
 // Delay configuration
 const QUERY_DELAY_MS = 2000; // 2-second delay between querying for new transactions
 const CLEANUP_INTERVAL_MS = 200000; // 200-second interval to clean groups
+const SIMULATION_TIME_MS = 1000; // Time to simulate each transaction (1 second)
 let isProcessing = false; // Flag to prevent overlapping processing
 
 const transactionQueue = [];
 const accessListMap = new Map();
-
+// Track simulation status
+const simulatedTransactions = new Set();
 
 const MAX_PARALLELIZABLE_GROUPS = 5; // Maximum number of parallelizable groups
 let parallelizableGroups = [];
@@ -102,6 +104,9 @@ async function processTransactionQueue() {
         console.log(parallelizableGroups);
         console.log("Updated Sequential Group:");
         console.log(sequentialGroup);
+        
+        // Run simulations concurrently
+        runSimulations();
     } catch (error) {
         console.error("Error processing transaction queue:", error);
     } finally {
@@ -141,10 +146,89 @@ function hasCollision(txHash, group) {
     return false; // No collision
 }
 
+// Function to run both types of simulations concurrently
+function runSimulations() {
+    // Run both simulations without awaiting them
+    const parallelSimulationPromise = simulateParallelizableGroups();
+    const sequentialSimulationPromise = simulateSequentialGroup();
+    
+    // Optional: Handle when both simulations are done
+    Promise.all([parallelSimulationPromise, sequentialSimulationPromise])
+        .then(() => {
+            console.log("All simulations completed");
+        })
+        .catch(error => {
+            console.error("Error in simulations:", error);
+        });
+}
+
+// Simulate transactions in parallelizable groups
+async function simulateParallelizableGroups() {
+    console.log("Starting parallel simulations...");
+    
+    const simulations = [];
+    
+    // For each group, simulate all transactions in the group concurrently
+    for (let i = 0; i < parallelizableGroups.length; i++) {
+        const group = parallelizableGroups[i];
+        if (group.length === 0) continue;
+        
+        console.log(`Running parallel group ${i + 1} with ${group.length} transactions`);
+        
+        // Simulate all transactions in this group concurrently
+        const groupSimulations = group.map(txHash => simulateTransaction(txHash, true));
+        
+        simulations.push(Promise.all(groupSimulations));
+    }
+    
+    // Wait for all group simulations to complete
+    await Promise.all(simulations);
+    console.log("All parallel simulations completed");
+}
+
+// Simulate transactions in the sequential group
+async function simulateSequentialGroup() {
+    console.log("Starting sequential simulations...");
+    
+    // Create a copy of the sequential group to avoid issues if it's modified during simulation
+    const txsToSimulate = [...sequentialGroup];
+    
+    for (const txHash of txsToSimulate) {
+        await simulateTransaction(txHash, false);
+    }
+    
+    console.log("All sequential simulations completed");
+}
+
+// Simulate a single transaction
+async function simulateTransaction(txHash, isParallel) {
+    // Skip if already simulated
+    if (simulatedTransactions.has(txHash)) {
+        return;
+    }
+    
+    const startTime = Date.now();
+    console.log(`[${isParallel ? 'PARALLEL' : 'SEQUENTIAL'}] Simulating transaction: ${txHash}`);
+    
+    try {
+        // Simulate transaction execution by waiting
+        await new Promise(resolve => setTimeout(resolve, SIMULATION_TIME_MS));
+        
+        // Mark as simulated
+        simulatedTransactions.add(txHash);
+        
+        const duration = Date.now() - startTime;
+        console.log(`[${isParallel ? 'PARALLEL' : 'SEQUENTIAL'}] Completed transaction: ${txHash} in ${duration}ms`);
+    } catch (error) {
+        console.error(`Error simulating transaction ${txHash}:`, error);
+    }
+}
+
 // Function to clean parallelizableGroups and sequentialGroup
 function cleanGroups() {
     parallelizableGroups = []; // Reset parallelizable groups
     sequentialGroup = []; // Reset sequential group
+    simulatedTransactions.clear(); // Clear the set of simulated transactions
     console.log("Cleaned parallelizableGroups and sequentialGroup.");
 }
 
