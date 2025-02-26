@@ -156,24 +156,6 @@ This structure groups compatible transactions that can be processed in parallel,
 - Assigns unique batch IDs so we can track and monitor them
 - Optimizes how batches are composed to maximize throughput
 
-#### Enhanced API for Parallel Transaction Management
-
-We've built a comprehensive API for working with parallel transactions:
-
-```go
-// ParallelTxPoolAPI offers an API for working with parallel transactions
-type ParallelTxPoolAPI struct {
-    pool *ParallelPool
-}
-```
-
-This API lets you:
-- Tag transactions as parallelizable or sequential
-- Configure batch sizes to suit your needs
-- Trigger batch execution when you want
-- Get detailed stats about your transactions and batches
-- Analyze transaction data to see if it's suitable for parallelization
-
 ### Transaction Processing Flow
 
 #### Transaction Type Definition
