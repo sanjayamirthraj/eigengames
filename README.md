@@ -252,7 +252,7 @@ func (p *ParallelPool) prepareBatches() {
     // ...
 }
 ```
-
+## An alternative approach
 ### 2. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
 
 Our first approach involves creating a complete alternative Layer 1 blockchain that natively supports parallel transaction execution. This implementation:
