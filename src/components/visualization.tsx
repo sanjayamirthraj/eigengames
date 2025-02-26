@@ -904,7 +904,7 @@ const EthereumTransactionBatching = () => {
         const startTime = Date.now();
         const duration = 1000; // Slower for more clarity
         
-        return new Promise(resolve => {
+        await new Promise(resolve => {
           function update() {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
@@ -933,7 +933,8 @@ const EthereumTransactionBatching = () => {
             if (progress < 1) {
               requestAnimationFrame(update);
             } else {
-              // Remove the individual transaction highlight
+              // Add pulse highlight when transaction enters block
+              pulseHighlight(currentBlock);
               resolve();
             }
           }
@@ -1394,7 +1395,7 @@ const EthereumTransactionBatching = () => {
               const startTime = Date.now();
               const duration = 1000; // Slower for more clarity
               
-              return new Promise(resolve => {
+              await new Promise(resolve => {
                 function update() {
                   const elapsed = Date.now() - startTime;
                   const progress = Math.min(elapsed / duration, 1);
@@ -1423,7 +1424,8 @@ const EthereumTransactionBatching = () => {
                   if (progress < 1) {
                     requestAnimationFrame(update);
                   } else {
-                    // Remove the individual transaction highlight
+                    // Add pulse highlight when transaction enters block
+                    pulseHighlight(batchBlockRef.current);
                     resolve();
                   }
                 }
@@ -1437,9 +1439,6 @@ const EthereumTransactionBatching = () => {
           
           // Wait for all transactions in this batch to move to blockchain
           await Promise.all(blockchainPromises);
-          
-          // Add a single pulse highlight for the whole batch
-          pulseHighlight(batchBlockRef.current);
           
           // Add a visual effect to show batch completion
           const completionFlash = new THREE.Mesh(
