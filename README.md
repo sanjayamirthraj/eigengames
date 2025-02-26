@@ -29,20 +29,20 @@ Ethereum is a state machine, and the EVM executes transactions sequentially, one
 
 So how do you change this?
 
+## Solution
+
+Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. By identifying which transactions can safely be executed in parallel without state conflicts, we can significantly increase overall throughput while preserving blockchain consistency.
+
 Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementaiton uses a state access batching algorithm to figure out which transactions can be processed simultaneously and which ones need to wait. It's similar to how web servers handle multiple requests concurrently while making sure related operations still happen in the right sequence.
 
 Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks. We've developed two possible implementation paths:
 
-We have the brains of the operation with our custom algorithms, and we look to speed up ETH 
+Our first approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types. This can directly be used on mainnet or any EVM compatible chain. 
 
+The second way that protocols can use our custom batching solution is through the creation of Alt L1s!
 
-Our second approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types
+We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
 
-More on the client:
-
-## Solution
-
-Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. By identifying which transactions can safely be executed in parallel without state conflicts, we can significantly increase overall throughput while preserving blockchain consistency.
 
 ### Quantitative Throughput Analysis
 
@@ -73,30 +73,20 @@ Assuming a total block time of 12 seconds split evenly among p = c = 6 seconds, 
 Our implementation integrates with EigenLayer's AVS by:
 
 1. Using the AVS to compute the parallelizable batches through state access
-2. Introducing specialized handling for state-independent transaction batches
-3. Optimizing the block proposal process to include parallel-executed transactions 
-4. Enhancing validator logic to verify parallel execution results
+2. Using multiple operators for consensus on batching algorithm outputs
+3. Enabling consistent validation of the algorithm for secure results
+4. Creating validator logic to verify parallel execution results
 
-The integration allows EigenLayer AVS to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities of EigenLayer-based systems and blockchains.
+The AVS integration allows anyone to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities.
+
+# Implementation of Custom Batching
 
 
-### 1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
-
-Our first approach involves creating a complete alternative Layer 1 blockchain that natively supports parallel transaction execution. This implementation:
-
-- Uses custom consensus mechanisms optimized for parallel processing
-- Incorporates parallel execution directly into the block production pipeline
-- Features native support for transaction dependency analysis and grouping
-- Provides built-in mempool organization for efficient batching
-- Includes specialized validator logic to ensure consistency across parallel executions
-
-The Alt-L1 approach gives us complete freedom to optimize the entire blockchain stack for parallelism, from transaction submission to block production and validation.
-
-### 2. Custom Client Implementation 
+### 1. Custom Client Implementation 
 
 ## Custom Client Implementation Details
 
-Our custom client introduces parallel transaction processing through a well-defined EIP that extends current capabilities without breaking compatibility. The implementation includes:
+Our custom client, which is currently in work, introduces parallel transaction processing. The technical implementation includes:
 
 ### Core Components
 
@@ -188,7 +178,7 @@ const (
 
 #### Transaction Tagging and Validation
 
-When you create a transaction for parallel processing, it goes through a tagging process:
+When we get a transaction for parallel processing, it goes through a tagging process:
 
 ```go
 // TagTransaction adds parallelization tags to a transaction
@@ -210,8 +200,7 @@ func (api *ParallelTxPoolAPI) TagTransaction(ctx context.Context, args TagTransa
 
 This tagging approach has several advantages:
 1. It makes detecting parallelizable transactions really simple
-2. It lets clients decide which transactions can be parallelized
-3. It saves us from having to do complex dependency analysis at runtime
+2. It saves us from having to do complex dependency analysis at runtime by using the AVS to offload all computation!
 
 #### Batch Preparation and Execution
 
@@ -249,29 +238,14 @@ func (p *ParallelPool) prepareBatches() {
 }
 ```
 
-The batch execution process takes advantage of multi-core processors for true parallelism:
+### 2. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
 
-```go
-// ExecuteBatch executes a batch of parallelizable transactions
-func (p *ParallelPool) ExecuteBatch(batch TxBatch) ([]common.Hash, error) {
-    // ...
-    
-    // Use semaphore to limit concurrent executions if needed
-    sem := make(chan struct{}, runtime.NumCPU())
-    
-    // Clone state for each transaction to isolate changes
-    for _, tx := range batch.Transactions {
-        // ...
-        
-        go func() {
-            // Create an isolated state copy for this transaction
-            txStateDB := stateDB.Copy()
-            
-            // Process transaction (would integrate with EVM in real implementation)
-            // ...
-        }()
-    }
-    
-    // ...
-}
-```
+Our first approach involves creating a complete alternative Layer 1 blockchain that natively supports parallel transaction execution. This implementation:
+
+- Uses custom consensus mechanisms optimized for parallel processing
+- Incorporates parallel execution directly into the block production pipeline
+- Features native support for transaction dependency analysis and grouping
+- Provides built-in mempool organization for efficient batching
+- Includes specialized validator logic to ensure consistency across parallel executions
+
+The Alt-L1 approach gives us complete freedom to optimize the entire blockchain stack for parallelism, from transaction submission to block production and validation.
