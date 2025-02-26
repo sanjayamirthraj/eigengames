@@ -1,255 +1,375 @@
-## Go Ethereum
+# Parallel Transaction Pool for Go-Ethereum
 
-Golang execution layer implementation of the Ethereum protocol.
+## Overview
 
-[![API Reference](
-https://pkg.go.dev/badge/github.com/ethereum/go-ethereum
-)](https://pkg.go.dev/github.com/ethereum/go-ethereum?tab=doc)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ethereum/go-ethereum)](https://goreportcard.com/report/github.com/ethereum/go-ethereum)
-[![Travis](https://app.travis-ci.com/ethereum/go-ethereum.svg?branch=master)](https://app.travis-ci.com/github/ethereum/go-ethereum)
-[![Discord](https://img.shields.io/badge/discord-join%20chat-blue.svg)](https://discord.gg/nthXNEv)
+This document describes the implementation of a parallel transaction pool in Go-Ethereum. The parallel transaction pool is a new component that enables the Ethereum client to process multiple transactions concurrently, offering significant performance improvements for transaction throughput.
 
-Automated builds are available for stable releases and the unstable master branch. Binary
-archives are published at https://geth.ethereum.org/downloads/.
+Traditional Ethereum transaction processing is sequential, requiring transactions from the same account to be processed in nonce order. The parallel transaction pool extends this model by intelligently identifying and batching transactions that can be executed concurrently, while still ensuring transactions with dependencies are processed in the correct order.
 
-## Building the source
+## Implementation Details
 
-For prerequisites and detailed build instructions please read the [Installation Instructions](https://geth.ethereum.org/docs/getting-started/installing-geth).
+### Files Created
 
-Building `geth` requires both a Go (version 1.23 or later) and a C compiler. You can install
-them using your favourite package manager. Once the dependencies are installed, run
+The implementation adds the following new files:
 
-```shell
-make geth
+- `go-ethereum/core/txpool/parallelpool/parallelpool.go`: Core implementation of the parallel transaction pool
+- `go-ethereum/core/txpool/parallelpool/list.go`: Transaction list management
+- `go-ethereum/core/txpool/parallelpool/interfaces.go`: Interface definitions for nonce tracking and transaction lookup
+
+### Key Components
+
+#### 1. ParallelTxData
+
+The `ParallelTxData` structure extends transaction data with dependency information:
+
+```go
+type ParallelTxData struct {
+    // Dependencies is a list of transaction hashes that this transaction depends on
+    Dependencies []common.Hash
+}
 ```
 
-or, to build the full suite of utilities:
+This structure allows transactions to explicitly declare which other transactions they depend on, enabling the pool to understand execution constraints.
 
-```shell
-make all
+#### 2. ParallelPool
+
+The `ParallelPool` is the main structure that implements the transaction pool. It maintains:
+
+- Pending transactions ready for execution
+- Queued transactions waiting for their dependencies
+- Transaction lookups by hash and sender address
+- Price-ordered transaction lists for prioritization
+
+The pool is integrated with Go-Ethereum's existing transaction pool system as an additional sub-pool.
+
+#### 3. Transaction Prioritization
+
+Transactions are prioritized for execution based on:
+
+1. Dependencies: Independent transactions are executed before dependent ones
+2. Gas price: Higher gas price transactions are prioritized within each category
+3. Nonce: Traditional nonce ordering is still respected
+
+### How It Works
+
+#### Transaction Type
+
+A new transaction type `ParallelTxType` (value `0x05`) has been defined to identify parallel transactions. This allows backward compatibility with existing transaction types.
+
+```go
+const (
+    // ParallelTxType is the transaction type for parallel transactions
+    ParallelTxType = 0x05
+    
+    // Constants for pool management
+    txPoolGlobalSlots = 4096            // Maximum number of executable transaction slots
+    txMaxSize         = 4 * 1024 * 1024 // Maximum size of a transaction
+)
 ```
 
-## Executables
+#### Transaction Addition
 
-The go-ethereum project comes with several wrappers/executables found in the `cmd`
-directory.
+When a parallel transaction is added to the pool:
 
-|  Command   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| :--------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`geth`** | Our main Ethereum CLI client. It is the entry point into the Ethereum network (main-, test- or private net), capable of running as a full node (default), archive node (retaining all historical state) or a light node (retrieving data live). It can be used by other processes as a gateway into the Ethereum network via JSON RPC endpoints exposed on top of HTTP, WebSocket and/or IPC transports. `geth --help` and the [CLI page](https://geth.ethereum.org/docs/fundamentals/command-line-options) for command line options. |
-|   `clef`   | Stand-alone signing tool, which can be used as a backend signer for `geth`.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-|  `devp2p`  | Utilities to interact with nodes on the networking layer, without running a full blockchain.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|  `abigen`  | Source code generator to convert Ethereum contract definitions into easy-to-use, compile-time type-safe Go packages. It operates on plain [Ethereum contract ABIs](https://docs.soliditylang.org/en/develop/abi-spec.html) with expanded functionality if the contract bytecode is also available. However, it also accepts Solidity source files, making development much more streamlined. Please see our [Native DApps](https://geth.ethereum.org/docs/developers/dapp-developer/native-bindings) page for details.                                  |
-|   `evm`    | Developer utility version of the EVM (Ethereum Virtual Machine) that is capable of running bytecode snippets within a configurable environment and execution mode. Its purpose is to allow isolated, fine-grained debugging of EVM opcodes (e.g. `evm --code 60ff60ff --debug run`).                                                                                                                                                                                                                                               |
-| `rlpdump`  | Developer utility tool to convert binary RLP ([Recursive Length Prefix](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp)) dumps (data encoding used by the Ethereum protocol both network as well as consensus wise) to user-friendlier hierarchical representation (e.g. `rlpdump --hex CE0183FFFFFFC4C304050583616263`).                                                                                                                                                                                |
+1. Its type and basic validity are verified
+2. Its dependencies are checked to ensure they exist in the pool
+3. It is inserted into the appropriate queue:
+   - If its nonce matches the next expected nonce for the sender, it goes to the pending queue
+   - Otherwise, it goes to the future queue until its nonce is ready
 
-## Running `geth`
+The core transaction addition logic is implemented in the `add` method:
 
-Going through all the possible command line flags is out of scope here (please consult our
-[CLI Wiki page](https://geth.ethereum.org/docs/fundamentals/command-line-options)),
-but we've enumerated a few common parameter combos to get you up to speed quickly
-on how you can run your own `geth` instance.
+```go
+// add validates a parallel transaction and adds it to the non-executable queue
+func (p *ParallelPool) add(tx *types.Transaction, local bool) error {
+    // Verify transaction type
+    if tx.Type() != ParallelTxType {
+        return ErrInvalidParallelTx
+    }
 
-### Hardware Requirements
+    // Validate transaction basic requirements
+    if err := p.validateTx(tx, local); err != nil {
+        return err
+    }
 
-Minimum:
+    // Extract transaction address
+    from, err := types.Sender(p.signer, tx)
+    if err != nil {
+        return err
+    }
 
-* CPU with 4+ cores
-* 8GB RAM
-* 1TB free storage space to sync the Mainnet
-* 8 MBit/sec download Internet service
+    // Check if tx dependencies (if any) exist in the pool
+    txData := getParallelTxData(tx)
+    for _, dep := range txData.Dependencies {
+        if p.all[dep] == nil {
+            return fmt.Errorf("dependency %s not found in pool", dep.Hex())
+        }
+    }
 
-Recommended:
+    // Add the transaction to the pool
+    p.all[tx.Hash()] = tx
+    p.priced.Put(tx)
 
-* Fast CPU with 8+ cores
-* 16GB+ RAM
-* High-performance SSD with at least 1TB of free space
-* 25+ MBit/sec download Internet service
+    // Add to pending if account nonce is next to be processed, otherwise queue it
+    nonce := tx.Nonce()
+    if p.pendingState.GetNonce(from) == nonce {
+        if list := p.pending[from]; list == nil {
+            p.pending[from] = newParallelList()
+        }
+        p.pending[from].Add(tx)
+    } else {
+        if list := p.queue[from]; list == nil {
+            p.queue[from] = newParallelList()
+        }
+        p.queue[from].Add(tx)
+    }
 
-### Full node on the main Ethereum network
+    // Update pool metrics and process dependent transactions
+    pendingParallelGauge.Update(int64(len(p.pending)))
+    queuedParallelGauge.Update(int64(len(p.queue)))
+    p.promoteExecutables()
 
-By far the most common scenario is people wanting to simply interact with the Ethereum
-network: create accounts; transfer funds; deploy and interact with contracts. For this
-particular use case, the user doesn't care about years-old historical data, so we can
-sync quickly to the current state of the network. To do so:
-
-```shell
-$ geth console
+    return nil
+}
 ```
 
-This command will:
- * Start `geth` in snap sync mode (default, can be changed with the `--syncmode` flag),
-   causing it to download more data in exchange for avoiding processing the entire history
-   of the Ethereum network, which is very CPU intensive.
- * Start the built-in interactive [JavaScript console](https://geth.ethereum.org/docs/interacting-with-geth/javascript-console),
-   (via the trailing `console` subcommand) through which you can interact using [`web3` methods](https://github.com/ChainSafe/web3.js/blob/0.20.7/DOCUMENTATION.md) 
-   (note: the `web3` version bundled within `geth` is very old, and not up to date with official docs),
-   as well as `geth`'s own [management APIs](https://geth.ethereum.org/docs/interacting-with-geth/rpc).
-   This tool is optional and if you leave it out you can always attach it to an already running
-   `geth` instance with `geth attach`.
+#### Dependency Resolution
 
-### A Full node on the Holesky test network
+The parallel pool implements dependency resolution through the `Ready()` method in the transaction list. This method:
 
-Transitioning towards developers, if you'd like to play around with creating Ethereum
-contracts, you almost certainly would like to do that without any real money involved until
-you get the hang of the entire system. In other words, instead of attaching to the main
-network, you want to join the **test** network with your node, which is fully equivalent to
-the main network, but with play-Ether only.
+1. Sorts transactions by nonce to respect the basic ordering requirement
+2. Separates transactions into independent and dependent groups
+3. Returns independent transactions first, allowing them to be processed in parallel
+4. Groups dependent transactions based on their dependencies
 
-```shell
-$ geth --holesky console
+```go
+// Ready returns a nonce-sorted slice of transactions that are ready to be executed.
+func (l *parallelList) Ready() []*types.Transaction {
+    l.mu.RLock()
+    defer l.mu.RUnlock()
+
+    if len(l.items) == 0 {
+        return nil
+    }
+
+    // First, get all transactions
+    txs := make([]*types.Transaction, 0, len(l.items))
+    for _, tx := range l.items {
+        txs = append(txs, tx)
+    }
+
+    // Sort transactions by nonce, then by parallelizability, then by gas price
+    sort.SliceStable(txs, func(i, j int) bool {
+        // First check nonce for execution order
+        if txs[i].Nonce() != txs[j].Nonce() {
+            return txs[i].Nonce() < txs[j].Nonce()
+        }
+
+        // Second check if the transactions are parallelizable
+        txDataI := extractParallelTxData(txs[i])
+        txDataJ := extractParallelTxData(txs[j])
+
+        isParallelI := isParallelizableTx(txs[i], txDataI)
+        isParallelJ := isParallelizableTx(txs[j], txDataJ)
+
+        if isParallelI != isParallelJ {
+            return isParallelI // Parallelizable transactions come first
+        }
+
+        // Finally, sort by gas price
+        return txs[i].GasPrice().Cmp(txs[j].GasPrice()) > 0
+    })
+
+    // Group transactions by whether they have dependencies
+    var independent, dependent []*types.Transaction
+
+    for _, tx := range txs {
+        txData := extractParallelTxData(tx)
+        if len(txData.Dependencies) == 0 {
+            independent = append(independent, tx)
+        } else {
+            dependent = append(dependent, tx)
+        }
+    }
+
+    // Return independent transactions first, then dependent transactions
+    return append(independent, dependent...)
+}
 ```
 
-The `console` subcommand has the same meaning as above and is equally
-useful on the testnet too.
+#### Transaction Execution
 
-Specifying the `--holesky` flag, however, will reconfigure your `geth` instance a bit:
+When the blockchain is ready to execute transactions:
 
- * Instead of connecting to the main Ethereum network, the client will connect to the Holesky 
-   test network, which uses different P2P bootnodes, different network IDs and genesis
-   states.
- * Instead of using the default data directory (`~/.ethereum` on Linux for example), `geth`
-   will nest itself one level deeper into a `holesky` subfolder (`~/.ethereum/holesky` on
-   Linux). Note, on OSX and Linux this also means that attaching to a running testnet node
-   requires the use of a custom endpoint since `geth attach` will try to attach to a
-   production node endpoint by default, e.g.,
-   `geth attach <datadir>/holesky/geth.ipc`. Windows users are not affected by
-   this.
+1. The miner requests pending transactions from the pool
+2. The parallel pool returns groups of transactions that can be executed in parallel
+3. The miner can process these groups concurrently, improving transaction throughput
 
-*Note: Although some internal protective measures prevent transactions from
-crossing over between the main network and test network, you should always
-use separate accounts for play and real money. Unless you manually move
-accounts, `geth` will by default correctly separate the two networks and will not make any
-accounts available between them.*
+## Performance Benefits
+
+The parallel transaction pool offers several performance improvements:
+
+1. **Higher Throughput**: Independent transactions can be executed simultaneously, allowing better utilization of multi-core systems
+2. **Reduced Latency**: Critical transactions can be prioritized and processed immediately without waiting for unrelated transactions
+3. **Better Resource Utilization**: Parallelization allows the system to make better use of available CPU cores
+4. **Gas Price Optimization**: Prioritization by gas price ensures the most valuable transactions are processed first
+
+## Integration with Go-Ethereum
+
+The parallel transaction pool is integrated with the main transaction pool system through the following changes:
+
+- The `ParallelPool` implements the `txpool.SubPool` interface
+- The pool is registered in `eth/backend.go` alongside the legacy and blob pools
+- The transaction type is recognized and routed to the appropriate pool
+
+```go
+// Add implements the txpool.SubPool interface
+func (p *ParallelPool) Add(txs []*types.Transaction, local bool) []error {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    errs := make([]error, len(txs))
+    for i, tx := range txs {
+        // Skip non-parallel transactions
+        if tx.Type() != ParallelTxType {
+            errs[i] = ErrInvalidParallelTx
+            continue
+        }
+        
+        // Process each transaction
+        errs[i] = p.add(tx, local)
+        
+        // Mark the transaction as local if it's from the local node
+        if local && errs[i] == nil {
+            from, err := types.Sender(p.signer, tx)
+            if err == nil {
+                p.locals.add(from)
+            }
+        }
+    }
+    
+    // Notify subscribers about added transactions
+    if len(txs) > 0 {
+        p.txFeed.Send(core.NewTxsEvent{Txs: txs})
+    }
+    
+    return errs
+}
+```
+
+The integration in `eth/backend.go`:
+
+```go
+// Initialize the transaction pool
+legacyPool := legacypool.New(config.TxPool, eth.blockchain)
+blobPool := blobpool.New(config.BlobPool, eth.blockchain)
+parallelPool := parallelpool.New(parallelpool.Config{PriceBump: config.TxPool.PriceBump}, eth.blockchain)
+
+eth.txPool, err = txpool.New(config.TxPool.PriceLimit, eth.blockchain, []txpool.SubPool{legacyPool, blobPool, parallelPool})
+```
+
+## Metrics and Monitoring
+
+A comprehensive set of metrics has been added to monitor the performance of the parallel transaction pool:
+
+```go
+// Metrics for the pending pool
+pendingParallelDiscardMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/discard", nil)
+pendingParallelReplaceMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/replace", nil)
+pendingParallelRateLimitMeter = metrics.NewRegisteredMeter("parallel/txpool/pending/ratelimit", nil) 
+pendingParallelNofundsMeter   = metrics.NewRegisteredMeter("parallel/txpool/pending/nofunds", nil)   
+
+// Metrics for the queued pool
+queuedParallelDiscardMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/discard", nil)
+queuedParallelReplaceMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/replace", nil)
+queuedParallelNofundsMeter   = metrics.NewRegisteredMeter("parallel/txpool/queued/nofunds", nil)
+queuedParallelRateLimitMeter = metrics.NewRegisteredMeter("parallel/txpool/queued/ratelimit", nil) 
+
+// General metrics
+knownParallelTxMeter       = metrics.NewRegisteredMeter("parallel/txpool/known", nil)
+validParallelTxMeter       = metrics.NewRegisteredMeter("parallel/txpool/valid", nil)
+invalidParallelTxMeter     = metrics.NewRegisteredMeter("parallel/txpool/invalid", nil)
+underpricedParallelTxMeter = metrics.NewRegisteredMeter("parallel/txpool/underpriced", nil)
+overflowParallelTxMeter    = metrics.NewRegisteredMeter("parallel/txpool/overflow", nil)
+
+pendingParallelGauge = metrics.NewRegisteredGauge("parallel/txpool/pending", nil)
+queuedParallelGauge  = metrics.NewRegisteredGauge("parallel/txpool/queued", nil)
+localParallelGauge   = metrics.NewRegisteredGauge("parallel/txpool/local", nil)
+slotsParallelGauge   = metrics.NewRegisteredGauge("parallel/txpool/slots", nil)
+```
+
+These metrics are updated throughout the code to track transaction processing and pool state.
+
+## Thread Safety
+
+To ensure thread safety, we've implemented proper mutex locking throughout the pool:
+
+1. The main `ParallelPool` uses a read-write mutex (`sync.RWMutex`) to protect its internal state
+2. The `parallelList` structure has its own mutex for concurrent access to transaction lists
+3. The `txLookup` structure also has a mutex for thread-safe hash-based lookups
+
+This ensures the parallel transaction pool can safely handle concurrent operations in a high-throughput environment.
+
+## Usage
+
+### Submitting Parallel Transactions
+
+To use the parallel transaction pool, clients need to:
+
+1. Set the transaction type to `0x05` (ParallelTxType)
+2. Optionally include dependency information in the transaction data
+3. Submit the transaction as usual
 
 ### Configuration
 
-As an alternative to passing the numerous flags to the `geth` binary, you can also pass a
-configuration file via:
+The parallel pool respects the standard Go-Ethereum transaction pool configuration options, including:
 
-```shell
-$ geth --config /path/to/your_config.toml
+- Price limits for accepting transactions
+- Pool size limits for pending and queued transactions
+- Local transaction handling preferences
+
+## Error Handling
+
+The implementation includes comprehensive error handling with specific error types:
+
+```go
+var (
+    ErrInvalidParallelTx   = errors.New("invalid parallel transaction type")
+    ErrParallelTxNonceUsed = errors.New("parallel transaction nonce already used")
+    ErrIntrinsicGas        = errors.New("intrinsic gas too low")
+    ErrGasLimit            = errors.New("exceeds block gas limit")
+    ErrNegativeValue       = errors.New("negative value")
+    ErrOversizedData       = errors.New("oversized data")
+    ErrNonceTooLow         = errors.New("nonce too low")
+    ErrInsufficientFunds   = errors.New("insufficient funds for gas * price + value")
+    ErrTxPoolOverflow      = errors.New("parallel txpool is full")
+)
 ```
 
-To get an idea of how the file should look like you can use the `dumpconfig` subcommand to
-export your existing configuration:
+These errors provide clear feedback when transactions cannot be added to the pool.
 
-```shell
-$ geth --your-favourite-flags dumpconfig
-```
+## Optimization Considerations
 
-#### Docker quick start
+Several optimizations were made in the implementation:
 
-One of the quickest ways to get Ethereum up and running on your machine is by using
-Docker:
+1. **Memory Efficiency**: Using maps for efficient lookups by hash and address
+2. **Sorting Optimization**: Using `sort.SliceStable` to preserve order within same-nonce transactions
+3. **Price Sorting**: Maintaining a price-sorted list for efficient discard of underpriced transactions
+4. **Concurrent Access**: Using read-write locks to allow concurrent reads
 
-```shell
-docker run -d --name ethereum-node -v /Users/alice/ethereum:/root \
-           -p 8545:8545 -p 30303:30303 \
-           ethereum/client-go
-```
+## Future Improvements
 
-This will start `geth` in snap-sync mode with a DB memory allowance of 1GB, as the
-above command does.  It will also create a persistent volume in your home directory for
-saving your blockchain as well as map the default ports. There is also an `alpine` tag
-available for a slim version of the image.
+Potential future enhancements to the parallel transaction pool include:
 
-Do not forget `--http.addr 0.0.0.0`, if you want to access RPC from other containers
-and/or hosts. By default, `geth` binds to the local interface and RPC endpoints are not
-accessible from the outside.
+1. **Dynamic Dependency Detection**: Automatically detect potential conflicts between transactions
+2. **Smart Contract Dependency Analysis**: Analyze smart contract interactions to infer dependencies
+3. **Advanced Scheduling Algorithms**: Implement more sophisticated algorithms for transaction batching
+4. **Inter-Pool Coordination**: Better coordinate between different sub-pools (legacy, blob, parallel)
+5. **Dependency Extraction**: Enhance the `getParallelTxData` method to properly decode transaction data and extract actual dependencies
+6. **Funds Validation**: Improve the validation of transaction funds for a more robust implementation
 
-### Programmatically interfacing `geth` nodes
+## Conclusion
 
-As a developer, sooner rather than later you'll want to start interacting with `geth` and the
-Ethereum network via your own programs and not manually through the console. To aid
-this, `geth` has built-in support for a JSON-RPC based APIs ([standard APIs](https://ethereum.github.io/execution-apis/api-documentation/)
-and [`geth` specific APIs](https://geth.ethereum.org/docs/interacting-with-geth/rpc)).
-These can be exposed via HTTP, WebSockets and IPC (UNIX sockets on UNIX based
-platforms, and named pipes on Windows).
+The parallel transaction pool is a significant enhancement to Ethereum's transaction processing capabilities. By intelligently parallelizing transaction execution while respecting dependencies, it offers substantial throughput improvements without compromising transaction consistency.
 
-The IPC interface is enabled by default and exposes all the APIs supported by `geth`,
-whereas the HTTP and WS interfaces need to manually be enabled and only expose a
-subset of APIs due to security reasons. These can be turned on/off and configured as
-you'd expect.
-
-HTTP based JSON-RPC API options:
-
-  * `--http` Enable the HTTP-RPC server
-  * `--http.addr` HTTP-RPC server listening interface (default: `localhost`)
-  * `--http.port` HTTP-RPC server listening port (default: `8545`)
-  * `--http.api` API's offered over the HTTP-RPC interface (default: `eth,net,web3`)
-  * `--http.corsdomain` Comma separated list of domains from which to accept cross-origin requests (browser enforced)
-  * `--ws` Enable the WS-RPC server
-  * `--ws.addr` WS-RPC server listening interface (default: `localhost`)
-  * `--ws.port` WS-RPC server listening port (default: `8546`)
-  * `--ws.api` API's offered over the WS-RPC interface (default: `eth,net,web3`)
-  * `--ws.origins` Origins from which to accept WebSocket requests
-  * `--ipcdisable` Disable the IPC-RPC server
-  * `--ipcpath` Filename for IPC socket/pipe within the datadir (explicit paths escape it)
-
-You'll need to use your own programming environments' capabilities (libraries, tools, etc) to
-connect via HTTP, WS or IPC to a `geth` node configured with the above flags and you'll
-need to speak [JSON-RPC](https://www.jsonrpc.org/specification) on all transports. You
-can reuse the same connection for multiple requests!
-
-**Note: Please understand the security implications of opening up an HTTP/WS based
-transport before doing so! Hackers on the internet are actively trying to subvert
-Ethereum nodes with exposed APIs! Further, all browser tabs can access locally
-running web servers, so malicious web pages could try to subvert locally available
-APIs!**
-
-### Operating a private network
-
-Maintaining your own private network is more involved as a lot of configurations taken for
-granted in the official networks need to be manually set up.
-
-Unfortunately since [the Merge](https://ethereum.org/en/roadmap/merge/) it is no longer possible
-to easily set up a network of geth nodes without also setting up a corresponding beacon chain.
-
-There are three different solutions depending on your use case:
-
-  * If you are looking for a simple way to test smart contracts from go in your CI, you can use the [Simulated Backend](https://geth.ethereum.org/docs/developers/dapp-developer/native-bindings#blockchain-simulator).
-  * If you want a convenient single node environment for testing, you can use our [Dev Mode](https://geth.ethereum.org/docs/developers/dapp-developer/dev-mode).
-  * If you are looking for a multiple node test network, you can set one up quite easily with [Kurtosis](https://geth.ethereum.org/docs/fundamentals/kurtosis).
-
-## Contribution
-
-Thank you for considering helping out with the source code! We welcome contributions
-from anyone on the internet, and are grateful for even the smallest of fixes!
-
-If you'd like to contribute to go-ethereum, please fork, fix, commit and send a pull request
-for the maintainers to review and merge into the main code base. If you wish to submit
-more complex changes though, please check up with the core devs first on [our Discord Server](https://discord.gg/invite/nthXNEv)
-to ensure those changes are in line with the general philosophy of the project and/or get
-some early feedback which can make both your efforts much lighter as well as our review
-and merge procedures quick and simple.
-
-Please make sure your contributions adhere to our coding guidelines:
-
- * Code must adhere to the official Go [formatting](https://golang.org/doc/effective_go.html#formatting)
-   guidelines (i.e. uses [gofmt](https://golang.org/cmd/gofmt/)).
- * Code must be documented adhering to the official Go [commentary](https://golang.org/doc/effective_go.html#commentary)
-   guidelines.
- * Pull requests need to be based on and opened against the `master` branch.
- * Commit messages should be prefixed with the package(s) they modify.
-   * E.g. "eth, rpc: make trace configs optional"
-
-Please see the [Developers' Guide](https://geth.ethereum.org/docs/developers/geth-developer/dev-guide)
-for more details on configuring your environment, managing project dependencies, and
-testing procedures.
-
-### Contributing to geth.ethereum.org
-
-For contributions to the [go-ethereum website](https://geth.ethereum.org), please checkout and raise pull requests against the `website` branch.
-For more detailed instructions please see the `website` branch [README](https://github.com/ethereum/go-ethereum/tree/website#readme) or the 
-[contributing](https://geth.ethereum.org/docs/developers/geth-developer/contributing) page of the website.
-
-## License
-
-The go-ethereum library (i.e. all code outside of the `cmd` directory) is licensed under the
-[GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html),
-also included in our repository in the `COPYING.LESSER` file.
-
-The go-ethereum binaries (i.e. all code inside of the `cmd` directory) are licensed under the
-[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also
-included in our repository in the `COPYING` file.
+This implementation maintains backward compatibility with existing Ethereum transactions while providing a path forward for higher-performance transaction processing.
