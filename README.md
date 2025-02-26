@@ -1,4 +1,5 @@
-# Parallel Transaction Pool for Go-Ethereum: Enabling Concurrent Transaction Processing
+# Further changes -- Implementing a GETH client for parallelizable transactions
+## Parallel Transaction Pool for Go-Ethereum: Enabling Concurrent Transaction Processing
 
 ## Introduction
 
