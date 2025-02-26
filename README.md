@@ -22,13 +22,8 @@
   - [Performance Monitoring](#performance-monitoring)
 - [Future Research Directions](#future-research-directions)
 
+
 ## Introduction
-
-This repo contains our implementation of a parallel transaction pool for EigenLayer's AVS. We're tackling Ethereum's limitation in traditional blockchain transaction processing, which currently forces transactions from the same account to be processed one after another in strict nonce order. Our parallel transaction algorithm and batching improves this by figuring out which transactions can be executed at the same time, while still making sure dependent transactions happen in the right order.
-
-We've managed to significantly boost performance and throughput by applying smart parallelization techniques, kind of like how multi-threaded processors work in modern computers. The best part is that our implementation maintains all of the security and consistency guarantees while making much better use of available resources.
-
-## Implementation Overview
 
 The system uses a state access batching algorithm to figure out which transactions can be processed simultaneously and which ones need to wait. It's similar to how web servers handle multiple requests concurrently while making sure related operations still happen in the right sequence.
 
@@ -68,6 +63,17 @@ New Throughput = Block size / (p + c/3.4)
 ```
 
 Assuming a total block time of 12 seconds split evenly among p = c = 6 seconds, the new throughput improves from 9.08 to 14.04 transactions per second, representing a 1.54x increase. This substantial improvement demonstrates the real-world impact of our parallel transaction processing approach.
+
+## Integration with EigenLayer AVS
+
+Our implementation integrates with EigenLayer's AVS by:
+
+1. Using the AVS to compute the parallelizable batches through state access
+2. Introducing specialized handling for state-independent transaction batches
+3. Optimizing the block proposal process to include parallel-executed transactions 
+4. Enhancing validator logic to verify parallel execution results
+
+The integration allows EigenLayer AVS to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities of EigenLayer-based systems and blockchains.
 
 
 ### 1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain
@@ -265,27 +271,3 @@ func (p *ParallelPool) ExecuteBatch(batch TxBatch) ([]common.Hash, error) {
     // ...
 }
 ```
-
-## Integration with EigenLayer AVS
-
-Our implementation integrates with EigenLayer's AVS by:
-
-1. Extending the AVS to support parallel transaction processing
-2. Introducing specialized handling for state-independent transaction batches
-3. Optimizing the block proposal process to include parallel-executed transactions 
-4. Enhancing validator logic to verify parallel execution results
-
-The integration allows EigenLayer AVS to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities of EigenLayer-based systems.
-
-## Performance Improvements
-
-Our parallel transaction pool delivers some significant performance improvements:
-
-1. **Higher Throughput**: Parallel execution of independent transactions really boosts processing capacity, similar to how multi-threading speeds up CPU performance
-2. **Lower Latency**: Critical transactions don't have to wait for unrelated ones, so they get confirmed faster
-3. **Better Resource Usage**: Modern multi-core systems can efficiently distribute computational resources across concurrent transaction execution
-4. **Economic Efficiency**: Gas price prioritization ensures block space goes to the transactions with the highest economic value
-
-### Performance Monitoring
-
-## Future Research Directions
