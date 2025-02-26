@@ -43,8 +43,24 @@ The second way that protocols can use our custom batching solution is through th
 
 We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
 
+## The Batching Algorithm: The Heart of Our Innovation
+
+What makes our solution truly groundbreaking is our custom batching algorithm - the most challenging and intellectually demanding component of the entire system. This algorithm represents the culmination of cutting-edge research in blockchain parallelization that has been at the forefront of Ethereum and EVM chain discussions in recent years.
+
+The batching algorithm is the true intellectual property and "secret sauce" of our system. It's what enables us to:
+
+1. **Accurately simulate state access patterns** of transactions before execution
+2. **Identify independent transaction groups** that can safely run in parallel
+3. **Maximize parallelization opportunities** without compromising blockchain consistency
+
+While Ethereum core developers and researchers have been exploring parallel execution for a while now, our implementation brings this concept to practical reality. 
+
+The actual theoretical implementation once the algorithmic brains into real world chains becomes relatively straightforward. The hard part is the batching logic - determining which transactions can safely execute in parallel. After that, the mechanical aspects of implementing the execution environment are theoretically trivial; we have proposed and began developing an execution client and proposed an easy implementation of how anyone can use our product to develop custom Alt-L1s later in this README. 
+
+Our batching algorithm's efficiency is what enables the significant throughput improvements demonstrated in our analysis, and it's what positions our solution as a transformative technology for EVM-compatible blockchains. How much faster can our batching make ETH L1?
 
 ### Quantitative Throughput Analysis
+Our perspective:
 
 The goal of parallelization is to increase execution speed, translating into higher throughput for blockchain networks. This benefits users through reduced transaction fees and benefits proposers by enabling them to process more transactions per second. Proposers can afford to accept smaller fees per transaction while earning higher total fees due to the increased transaction volume.
 
@@ -80,7 +96,6 @@ Our implementation integrates with EigenLayer's AVS by:
 The AVS integration allows anyone to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities.
 
 # Implementation of Custom Batching
-
 
 ### 1. Custom Client Implementation 
 
