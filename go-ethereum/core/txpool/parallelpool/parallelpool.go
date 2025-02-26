@@ -464,7 +464,37 @@ func (p *ParallelPool) promoteExecutables() {
 	queuedParallelGauge.Update(int64(len(p.queue)))
 }
 
-// validateTx validates that the transaction adheres to the pool's rules.
+// Add automatic conflict detection for storage slots
+func (p *ParallelPool) detectConflicts(tx *types.Transaction) []common.Hash {
+	var conflicts []common.Hash
+	p.currentState.Prepare(tx.Hash(), common.Hash{}, 0)
+	msg, _ := tx.AsMessage(p.signer, p.currentState.BaseFee())
+	
+	// Simulate transaction execution to get accessed addresses/storage slots
+	evm := p.chain.GetEVM(msg, p.currentState, nil)
+	evm.Config.Tracer = accessListTracer // Custom tracer to record storage access
+	
+	// Execute call to detect storage accesses
+	_, _, _, err := core.ApplyMessage(evm, msg, new(core.GasPool).AddGas(msg.Gas()))
+	if err == nil {
+		// Compare accessed storage with existing transactions
+		for addr, slots := range evm.StateDB.GetAccessList() {
+			for _, slot := range slots {
+				// Check if any pending tx modifies these slots
+				for _, pendingTx := range p.pending {
+					if pendingTx.To() != nil && *pendingTx.To() == addr {
+						if _, exists := pendingTx.GetStorageAccess()[slot]; exists {
+							conflicts = append(conflicts, pendingTx.Hash())
+						}
+					}
+				}
+			}
+		}
+	}
+	return conflicts
+}
+
+// Enhanced transaction validation with auto-detected conflicts
 func (p *ParallelPool) validateTx(tx *types.Transaction, local bool) error {
 	// Accept only parallel transactions
 	if tx.Type() != ParallelTxType {
@@ -506,6 +536,18 @@ func (p *ParallelPool) validateTx(tx *types.Transaction, local bool) error {
 
 	// Just assume funds are sufficient for this implementation
 	// In a real implementation, we would properly check the funds
+
+	// Auto-detect storage conflicts and add implicit dependencies
+	txData := getParallelTxData(tx)
+	if len(txData.Dependencies) == 0 {
+		conflicts := p.detectConflicts(tx)
+		txData.Dependencies = append(txData.Dependencies, conflicts...)
+	}
+	
+	// Check circular dependencies using topological sort
+	if err := p.checkDependencyCycles(tx, txData.Dependencies); err != nil {
+		return err
+	}
 
 	return nil
 }
