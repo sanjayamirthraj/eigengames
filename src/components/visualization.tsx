@@ -2,8 +2,31 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { 
+  CurrentBlock, 
+  BlockHistory, 
+  SimulationResults 
+} from '../lib/api';
 
-const EthereumTransactionBatching = () => {
+interface ServerData {
+  currentBlock: CurrentBlock | null;
+  blockHistory: BlockHistory | null;
+  simulationResults: SimulationResults | null;
+  parallelGroups: string[][] | null;
+  sequentialGroup: string[] | null;
+}
+
+interface EthereumTransactionBatchingProps {
+  serverData?: ServerData;
+  onRefreshRequest?: () => void;
+  onAddMockTransactions?: (count: number) => void;
+}
+
+const EthereumTransactionBatching: React.FC<EthereumTransactionBatchingProps> = ({
+  serverData,
+  onRefreshRequest,
+  onAddMockTransactions
+}) => {
   const batchMountRef = useRef(null);
   const individualMountRef = useRef(null);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -11,6 +34,7 @@ const EthereumTransactionBatching = () => {
   const [explanation, setExplanation] = useState('Click "Start Comparison" to begin');
   const [isInitialized, setIsInitialized] = useState(false);
   const [comparisonStats, setComparisonStats] = useState(null);
+  const [generatedTransaction, setGeneratedTransaction] = useState(false);
 
   // Initialize scene elements for batch processing
   const batchSceneRef = useRef(null);
@@ -549,10 +573,10 @@ const EthereumTransactionBatching = () => {
     return mesh;
   };
   
-  // Generate transactions
+  // Update the function that generates transactions to use server data
   const generateTransactions = (scene, mempoolRef, transactionsRef) => {
     if (!scene || !mempoolRef.current) return [];
-    
+
     const transactions = [];
     
     // Clear any existing transactions
@@ -565,10 +589,51 @@ const EthereumTransactionBatching = () => {
     // Get mempool position
     const mempoolPosition = new THREE.Vector3(-35, 0, 0); // Updated position to match createMempool
     
-    // Create new transactions
-    for (let i = 0; i < 20; i++) {
-      const state = Math.floor(Math.random() * 5);
-      const tx = createTransaction(`tx-${i}`, state);
+    // Use real data from server if available, otherwise use mock data
+    const parallelTxs = serverData?.currentBlock?.transactions.parallel || [];
+    const sequentialTxs = serverData?.currentBlock?.transactions.sequential || [];
+    const allTxs = [...parallelTxs, ...sequentialTxs];
+    
+    // If no transactions are available, generate some mock ones
+    if (allTxs.length === 0) {
+      // If we have the ability to add mock transactions and haven't done so yet
+      if (!generatedTransaction && onAddMockTransactions) {
+        onAddMockTransactions(10);
+        setGeneratedTransaction(true);
+        return [];
+      }
+      
+      // If we can't add mock transactions or already tried, create some local ones
+      if (allTxs.length === 0) {
+        for (let i = 0; i < 20; i++) {
+          const state = Math.floor(Math.random() * 5);
+          const tx = createTransaction(`tx-${i}`, state);
+          
+          if (tx) {
+            // Random position within mempool cylinder
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 5; // Slightly smaller than mempool radius
+            tx.position.set(
+              mempoolPosition.x + Math.cos(angle) * radius,
+              mempoolPosition.y + Math.random() * 0.5 + 0.5, // Slightly raised for visibility
+              mempoolPosition.z + Math.sin(angle) * radius
+            );
+            
+            scene.add(tx);
+            transactions.push(tx);
+            transactionsRef.current.push(tx);
+          }
+        }
+        return transactions;
+      }
+    }
+    
+    // Create transactions for visualization using available data
+    for (let i = 0; i < allTxs.length; i++) {
+      // Determine if transaction is parallel or sequential
+      const isParallel = parallelTxs.includes(allTxs[i]);
+      const state = Math.min(isParallel ? i % 5 : 3, 4); // Use 0-4 for parallel (diverse), 3 for sequential
+      const tx = createTransaction(allTxs[i], state);
       
       if (tx) {
         // Random position within mempool cylinder
@@ -589,12 +654,56 @@ const EthereumTransactionBatching = () => {
     return transactions;
   };
   
-  // Batch transactions by state
+  // Batch transactions using real group data
   const batchTransactions = (transactions) => {
     const batches = [[], [], [], []];
-    const statesInBatch = [{}, {}, {}, {}];
     
-    // Make a copy to avoid modifying original
+    // Use actual grouping data from server if available
+    if (serverData?.parallelGroups && transactions.length > 0) {
+      // Create a map of transaction hash to transaction object
+      const txMap = {};
+      transactions.forEach(tx => {
+        txMap[tx.userData.id] = tx;
+      });
+      
+      // Add transactions to batches based on server grouping
+      serverData.parallelGroups.forEach((group, groupIndex) => {
+        if (groupIndex < batches.length) {
+          group.forEach(txHash => {
+            if (txMap[txHash]) {
+              batches[groupIndex].push(txMap[txHash]);
+              txMap[txHash].userData.batch = groupIndex;
+            }
+          });
+        }
+      });
+      
+      // Handle sequential group separately
+      if (serverData.sequentialGroup) {
+        // Find transactions that belong to sequential group
+        serverData.sequentialGroup.forEach(txHash => {
+          if (txMap[txHash]) {
+            // Add to least full batch (simulating how they would be assigned)
+            let minBatchSize = Infinity;
+            let minBatchIndex = 0;
+            
+            for (let i = 0; i < batches.length; i++) {
+              if (batches[i].length < minBatchSize) {
+                minBatchSize = batches[i].length;
+                minBatchIndex = i;
+              }
+            }
+            
+            batches[minBatchIndex].push(txMap[txHash]);
+            txMap[txHash].userData.batch = minBatchIndex;
+          }
+        });
+      }
+      
+      return batches;
+    }
+    
+    // Fallback to original logic if server data isn't available
     const pendingTxs = [...transactions];
     
     while (pendingTxs.length > 0) {
@@ -610,12 +719,11 @@ const EthereumTransactionBatching = () => {
         if (batches[i].length >= 6) continue;
         
         // Check if state already in batch
-        if (statesInBatch[i][txState]) continue;
+        if (batches[i].some(batchTx => batchTx.userData.state === txState)) continue;
         
         // Add to batch
         batches[i].push(tx);
         tx.userData.batch = i;
-        statesInBatch[i][txState] = true;
         assigned = true;
         break;
       }
@@ -1553,6 +1661,11 @@ const EthereumTransactionBatching = () => {
   const startComparison = async () => {
     if (isSimulating) return;
     
+    // Refresh data from server if a refresh function is provided
+    if (onRefreshRequest) {
+      onRefreshRequest();
+    }
+    
     setIsSimulating(true);
     setComparisonStats(null);
     
@@ -1576,8 +1689,21 @@ const EthereumTransactionBatching = () => {
       return null;
     }
     
-    const batchTime = comparisonStats.batch.time / 1000;
-    const individualTime = comparisonStats.individual.time / 1000;
+    // Use real performance data from server if available
+    let batchTime = comparisonStats.batch.time / 1000;
+    let individualTime = comparisonStats.individual.time / 1000;
+    
+    // If we have real simulation results, use those instead of the animation time
+    if (serverData?.currentBlock?.stats) {
+      const serverBatchTime = serverData.currentBlock.stats.parallel.timeToMine / 1000;
+      const serverSequentialTime = serverData.currentBlock.stats.sequential.timeToMine / 1000;
+      
+      if (serverBatchTime > 0 && serverSequentialTime > 0) {
+        batchTime = serverBatchTime;
+        individualTime = serverSequentialTime;
+      }
+    }
+    
     const efficiency = ((individualTime - batchTime) / individualTime * 100).toFixed(1);
 
     return (
@@ -1614,6 +1740,13 @@ const EthereumTransactionBatching = () => {
         <p className="text-zinc-400 mt-2">
           Comparison of traditional fee-based sequential processing vs. EigenLayer AVS state-based batching for optimized throughput.
         </p>
+        {serverData?.currentBlock && (
+          <div className="mt-2 text-sm text-zinc-500">
+            Block #{serverData.currentBlock.id} • 
+            {serverData.currentBlock.transactions.parallel.length + 
+              serverData.currentBlock.transactions.sequential.length} transactions
+          </div>
+        )}
       </div>
       
       <div className="flex items-center justify-between p-4 bg-zinc-800">

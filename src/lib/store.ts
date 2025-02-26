@@ -8,9 +8,10 @@ const generateNewBlock = (): BlockBatch => {
   const txCount = Math.floor(Math.random() * 100) + 30;
   const sequentialCount = Math.floor(txCount * (Math.random() * 0.3));
   const isSequential = Math.random() > 0.8; // 20% chance of sequential block
+  const timestamp = Date.now(); // Add timestamp for uniqueness
   
   return {
-    id: `#${blockNumber}`,
+    id: `#${blockNumber}-${timestamp}`, // Add timestamp to make each ID unique
     transactions: txCount,
     totalFees: (Math.random() * 0.5 + 0.1).toFixed(3),
     expectedMEV: (Math.random() * 0.3 + 0.05).toFixed(3),
@@ -56,12 +57,15 @@ interface BlockStore {
   currentTransactions: Transaction[];
   isSimulating: boolean;
   simulationInterval: number | null;
+  simulationSpeed: number; // Speed in milliseconds
+  lastUpdated: Date;
   
   // Actions
   addNewBlock: () => void;
-  startSimulation: (intervalMs: number) => void;
+  startSimulation: (intervalMs?: number) => void;
   stopSimulation: () => void;
   resetBlocks: () => void;
+  setSimulationSpeed: (speed: number) => void;
 }
 
 export const useBlockStore = create<BlockStore>((set, get) => ({
@@ -69,6 +73,8 @@ export const useBlockStore = create<BlockStore>((set, get) => ({
   currentTransactions: generateTransactionsForBlock(15),
   isSimulating: false,
   simulationInterval: null,
+  simulationSpeed: 5000, // Default: 5 seconds
+  lastUpdated: new Date(),
   
   addNewBlock: () => {
     const newBlock = generateNewBlock();
@@ -81,20 +87,30 @@ export const useBlockStore = create<BlockStore>((set, get) => ({
     
     set(state => ({
       blocks: [newBlock, ...state.blocks.slice(0, 9)], // Keep only the 10 most recent blocks
-      currentTransactions: newTransactions
+      currentTransactions: newTransactions,
+      lastUpdated: new Date() // Update timestamp
     }));
   },
   
-  startSimulation: (intervalMs: number = 10000) => {
-    // Clear any existing interval
-    if (get().simulationInterval) {
-      clearInterval(get().simulationInterval);
+  startSimulation: (intervalMs?: number) => {
+    // First stop any existing simulation
+    const { simulationInterval } = get();
+    if (simulationInterval) {
+      clearInterval(simulationInterval);
     }
     
-    // Create new interval
+    // Set speed if provided
+    if (intervalMs) {
+      set({ simulationSpeed: intervalMs });
+    }
+    
+    // Get the current (possibly updated) speed
+    const speed = intervalMs || get().simulationSpeed;
+    
+    // Create new interval with the speed
     const interval = setInterval(() => {
       get().addNewBlock();
-    }, intervalMs) as unknown as number;
+    }, speed) as unknown as number;
     
     set({
       isSimulating: true,
@@ -117,7 +133,25 @@ export const useBlockStore = create<BlockStore>((set, get) => ({
   resetBlocks: () => {
     set({
       blocks: generateInitialBlocks(),
-      currentTransactions: generateTransactionsForBlock(15)
+      currentTransactions: generateTransactionsForBlock(15),
+      lastUpdated: new Date()
     });
+  },
+  
+  setSimulationSpeed: (speed: number) => {
+    const isCurrentlySimulating = get().isSimulating;
+    
+    // Stop current simulation if running
+    if (isCurrentlySimulating) {
+      get().stopSimulation();
+    }
+    
+    // Set new speed
+    set({ simulationSpeed: speed });
+    
+    // Restart if it was running
+    if (isCurrentlySimulating) {
+      get().startSimulation(speed);
+    }
   }
 })); 

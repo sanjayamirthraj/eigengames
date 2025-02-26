@@ -5,22 +5,31 @@ import DashboardLayout from "@/components/dashboard-layout";
 import HeroSection from "@/components/hero-section";
 import BlockStreamVisualization from "@/components/block-stream-visualization";
 import TransactionComparison from "@/components/transaction-comparison";
-import EthereumTransactionBatching from "@/components/visualization";
+import VisualizationController from "@/components/VisualizationController";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBlockStore } from "@/lib/store";
 
 export default function Home() {
-  const { addNewBlock } = useBlockStore();
+  const { addNewBlock, startSimulation, stopSimulation, isSimulating } = useBlockStore();
   
-  // Add a new block when the page loads to ensure fresh data
+  // Add a new block when the page loads and start the simulation for continuous updates
   useEffect(() => {
     // Add a small delay to ensure the store is initialized
     const timer = setTimeout(() => {
       addNewBlock();
+      
+      // Start the simulation for continuous updates every 5 seconds
+      if (!isSimulating) {
+        startSimulation(5000); // Update every 5 seconds
+      }
     }, 500);
     
-    return () => clearTimeout(timer);
-  }, [addNewBlock]);
+    // Clean up on unmount
+    return () => {
+      clearTimeout(timer);
+      stopSimulation(); // Stop the simulation when the component unmounts
+    };
+  }, [addNewBlock, startSimulation, stopSimulation, isSimulating]);
   
   return (
     <DashboardLayout>
@@ -48,7 +57,7 @@ export default function Home() {
           <CardContent>
             <div className="space-y-4">
               {[1, 2, 3].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-zinc-800/50">
+                <div key={`recent-activity-${i}`} className="flex items-center gap-3 p-2 rounded-md bg-zinc-800/50">
                   <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center text-purple-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -125,7 +134,7 @@ export default function Home() {
       <div className="mt-8">
         <h2 className="text-white text-xl font-semibold mb-4">Transaction Batching Visualization</h2>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl overflow-hidden">
-          <EthereumTransactionBatching />
+          <VisualizationController />
         </div>
       </div>
     </DashboardLayout>
