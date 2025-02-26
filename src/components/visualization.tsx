@@ -756,10 +756,10 @@ const EthereumTransactionBatching = () => {
         1500
       );
       
-      // Create blocks aligned with blockchain visualization
+      // Create blocks to fill
       const blocks = [
-        { position: { x: 25, y: 0, z: 0 }, transactions: [] }, // Matches blockchain position
-        { position: { x: 30, y: 0, z: 0 }, transactions: [] }     // Next block in chain
+        { position: { x: 15, y: 0, z: -3 }, transactions: [] }, // Adjusted position to match createBlockchain
+        { position: { x: 15, y: 0, z: 3 }, transactions: [] }
       ];
       
       let currentBlockIndex = 0;
@@ -838,12 +838,14 @@ const EthereumTransactionBatching = () => {
           600
         );
         
-        // Calculate final position within blockchain block bounds
-        const txCountInBlock = currentBlock.transactions.length - 1;
+        // Calculate final position in blockchain block
+        if (!indivBlockRef.current) continue;
+        
+        const txCountInBlock = currentBlock.transactions.length - 1; // Current position in block
         const finalPosition = {
-          x: currentBlock.position.x - 1.8 + (txCountInBlock % 5) * 0.9, // Centered in block
+          x: currentBlock.position.x - 1 + (txCountInBlock % 5) * 0.4,
           y: currentBlock.position.y + 0.5 + Math.floor(txCountInBlock / 5) * 0.4,
-          z: currentBlock.position.z // Ensure Z-axis alignment
+          z: currentBlock.position.z - 0.5 + Math.floor(txCountInBlock / 5) * 0.3
         };
         
         // Scale down transaction for block
