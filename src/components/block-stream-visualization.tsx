@@ -71,8 +71,7 @@ const BlockStreamVisualization = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-neutral-800">Most Optimal Parallelizable Block Options</h2>
+      <div className="flex justify-end">
         <div className="flex space-x-3">
           <Button 
             className={`${isSimulating ? 'bg-destructive hover:bg-destructive/90' : 'bg-success-600 hover:bg-success-700'} text-white shadow-sm`}

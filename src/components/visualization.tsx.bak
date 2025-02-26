@@ -2,6 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faSync } from '@fortawesome/free-solid-svg-icons';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 const EthereumTransactionBatching = () => {
   const batchMountRef = useRef(null);
@@ -11,6 +14,7 @@ const EthereumTransactionBatching = () => {
   const [explanation, setExplanation] = useState('Click "Start Comparison" to begin');
   const [isInitialized, setIsInitialized] = useState(false);
   const [comparisonStats, setComparisonStats] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Initialize scene elements for batch processing
   const batchSceneRef = useRef(null);
@@ -23,13 +27,17 @@ const EthereumTransactionBatching = () => {
   const batchBlockRef = useRef(null);
 
   // Initialize scene elements for individual processing
-  const indivSceneRef = useRef(null);   
+  const indivSceneRef = useRef(null);
   const indivRendererRef = useRef(null);
   const indivCameraRef = useRef(null);
   const indivTransactionsRef = useRef([]);
   const indivAnimationFrameRef = useRef(null);
   const indivMempoolRef = useRef(null);
   const indivBlockRef = useRef(null);
+
+  // Add new refs for CSS2D renderers
+  const batchLabelRendererRef = useRef(null);
+  const indivLabelRendererRef = useRef(null);
 
   // Initialize both Three.js scenes
   const initThreeJs = () => {
@@ -141,127 +149,63 @@ const EthereumTransactionBatching = () => {
     setIsInitialized(true);
   };
 
+  // Animation function for batch scene
+  const animateBatchScene = () => {
+    if (batchMempoolRef.current) {
+      batchMempoolRef.current.rotation.y += 0.003;
+    }
+  };
+
+  // Animation function for individual scene
+  const animateIndivScene = () => {
+    if (indivMempoolRef.current) {
+      indivMempoolRef.current.rotation.y += 0.003;
+    }
+  };
+
   useEffect(() => {
-    // Initialize Three.js
-    initThreeJs();
-    
-    // Handle window resize
-    const handleResize = () => {
-      if (!batchMountRef.current || !batchRendererRef.current || !batchCameraRef.current || !individualMountRef.current || !indivRendererRef.current || !indivCameraRef.current) return;
+    if (!isInitialized) {
+      // Setup batch processing scene
+      const batchCleanup = setupScene(
+        batchMountRef,
+        batchSceneRef,
+        batchCameraRef,
+        batchRendererRef,
+        batchLabelRendererRef,
+        animateBatchScene
+      );
       
-      const batchWidth = batchMountRef.current.clientWidth;
-      const batchHeight = batchMountRef.current.clientHeight;
-      const indivWidth = individualMountRef.current.clientWidth;
-      const indivHeight = individualMountRef.current.clientHeight;
+      // Setup individual processing scene
+      const indivCleanup = setupScene(
+        indivMountRef,
+        indivSceneRef,
+        indivCameraRef,
+        indivRendererRef,
+        indivLabelRendererRef,
+        animateIndivScene
+      );
       
-      batchCameraRef.current.aspect = batchWidth / batchHeight;
-      batchCameraRef.current.updateProjectionMatrix();
-      batchRendererRef.current.setSize(batchWidth, batchHeight);
-      
-      indivCameraRef.current.aspect = indivWidth / indivHeight;
-      indivCameraRef.current.updateProjectionMatrix();
-      indivRendererRef.current.setSize(indivWidth, indivHeight);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Handle intersection observer to only render when visible
-    const batchObserver = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting) {
-          initThreeJs();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (batchMountRef.current) {
-      batchObserver.observe(batchMountRef.current);
-    }
-    
-    const indivObserver = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting) {
-          initThreeJs();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (individualMountRef.current) {
-      indivObserver.observe(individualMountRef.current);
-    }
-    
-    // Cleanup function
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      
-      if (batchMountRef.current) {
-        batchObserver.unobserve(batchMountRef.current);
-      }
-      
-      if (individualMountRef.current) {
-        indivObserver.unobserve(individualMountRef.current);
-      }
-      
-      if (batchAnimationFrameRef.current) {
-        cancelAnimationFrame(batchAnimationFrameRef.current);
-      }
-      
-      if (indivAnimationFrameRef.current) {
-        cancelAnimationFrame(indivAnimationFrameRef.current);
-      }
-      
-      if (batchMountRef.current && batchRendererRef.current && batchRendererRef.current.domElement) {
-        if (batchMountRef.current.contains(batchRendererRef.current.domElement)) {
-          batchMountRef.current.removeChild(batchRendererRef.current.domElement);
-        }
-      }
-      
-      if (individualMountRef.current && indivRendererRef.current && indivRendererRef.current.domElement) {
-        if (individualMountRef.current.contains(indivRendererRef.current.domElement)) {
-          individualMountRef.current.removeChild(indivRendererRef.current.domElement);
-        }
-      }
-      
-      // Clean up any remaining geometries and materials
+      // Initialize both scenes
       if (batchSceneRef.current) {
-        batchSceneRef.current.traverse(object => {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
-          } else {
-            object.material.dispose();
-          }
-        }
-      });
+        createMempool(batchSceneRef.current, { x: -22, y: 0, z: 0 }, batchMempoolRef);
+        createBlockchain(batchSceneRef.current, batchBlockRef);
+        createBatchingArea(batchSceneRef.current, batchContainersRef);
       }
       
       if (indivSceneRef.current) {
-        indivSceneRef.current.traverse(object => {
-          if (object.geometry) object.geometry.dispose();
-          if (object.material) {
-            if (Array.isArray(object.material)) {
-              object.material.forEach(material => material.dispose());
-            } else {
-              object.material.dispose();
-            }
-          }
-        });
+        createMempool(indivSceneRef.current, { x: -22, y: 0, z: 0 }, indivMempoolRef);
+        createBlockchain(indivSceneRef.current, indivBlockRef);
       }
       
-      if (batchRendererRef.current) {
-        batchRendererRef.current.dispose();
-      }
+      setIsInitialized(true);
       
-      if (indivRendererRef.current) {
-        indivRendererRef.current.dispose();
-      }
-    };
-  }, []);
+      // Cleanup function
+      return () => {
+        batchCleanup && batchCleanup();
+        indivCleanup && indivCleanup();
+      };
+    }
+  }, [isInitialized]);
   
   // Create blockchain visualization - adjust positions for better top-down view
   const createBlockchain = (scene, blockRef) => {
@@ -335,6 +279,13 @@ const EthereumTransactionBatching = () => {
     blockchainGroup.add(newBlock);
     
     scene.add(blockchainGroup);
+    
+    // Add a label for the blockchain
+    createLabel('Blockchain', {
+      x: 15, // Match the blockchain x-position
+      y: 2, // Slightly above the blockchain
+      z: 0
+    }, scene);
   };
   
   // Create mempool visualization - adjust positions for better top-down view
@@ -342,7 +293,7 @@ const EthereumTransactionBatching = () => {
     if (!scene) return;
     
     const mempoolGroup = new THREE.Group();
-    mempoolGroup.position.set(-35, 0, 0); // Moved even further left to prevent overlap
+    mempoolGroup.position.set(-22, 0, 0); // Moved further left to avoid overlap
     
     // Create a mempool container with glowing effect
     const geometry = new THREE.CylinderGeometry(7, 7, 1, 32);
@@ -373,6 +324,13 @@ const EthereumTransactionBatching = () => {
     mempoolGroup.add(glowRing);
     
     scene.add(mempoolGroup);
+    
+    // Add label above the mempool
+    createLabel('Mempool', {
+      x: -22, 
+      y: 1, 
+      z: 0
+    }, scene);
   };
   
   // Create batching area
@@ -380,7 +338,7 @@ const EthereumTransactionBatching = () => {
     if (!scene) return;
     
     const batchingGroup = new THREE.Group();
-    batchingGroup.position.set(0, 0, 0); // Center position
+    batchingGroup.position.set(5, 0, 0); // Moved right to avoid overlap with mempool
     
     // Create batching area platform with glowing edges
     const geometry = new THREE.BoxGeometry(20, 0.5, 10);
@@ -452,6 +410,13 @@ const EthereumTransactionBatching = () => {
     
     batchContainersRef.current = batches;
     scene.add(batchingGroup);
+    
+    // Add a label for the batching area
+    createLabel('Batching Area', {
+      x: 5, // Match the batching area x-position
+      y: 2, // Slightly above the batching area
+      z: 0
+    }, scene);
   };
   
   // Create transaction object with enhanced visuals
@@ -528,7 +493,7 @@ const EthereumTransactionBatching = () => {
     transactionsRef.current = [];
     
     // Get mempool position
-    const mempoolPosition = new THREE.Vector3(-35, 0, 0); // Updated position to match createMempool
+    const mempoolPosition = new THREE.Vector3(-22, 0, 0); // Updated to match new mempool position
     
     // Create new transactions
     for (let i = 0; i < 20; i++) {
@@ -680,7 +645,79 @@ const EthereumTransactionBatching = () => {
     });
   };
   
-  // Run individual transaction simulation (traditional Ethereum)
+  // Get position along a path
+  const getPathPosition = (path, progress) => {
+    // Sample the path at the given progress (0-1)
+    const point = path.getPointAt(progress);
+    
+    return {
+      x: point.x,
+      y: point.y,
+      z: point.z
+    };
+  };
+
+  // Animate along a path with camera following
+  const animateAlongPath = (object, path, duration, camera, finalPosition = null) => {
+    return new Promise(resolve => {
+      const startTime = Date.now();
+      
+      function update() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Follow path for first 80% of animation
+        if (progress < 0.8 || !finalPosition) {
+          const pathProgress = finalPosition ? progress / 0.8 : progress;
+          const pathPos = getPathPosition(path, pathProgress);
+          
+          // Update object position
+          object.position.set(pathPos.x, pathPos.y, pathPos.z);
+          
+          // Update camera to follow if provided
+          if (camera) {
+            // Calculate camera position to follow the object
+            const cameraOffset = { x: 3, y: 5, z: 3 };
+            camera.position.set(
+              pathPos.x + cameraOffset.x,
+              pathPos.y + cameraOffset.y,
+              pathPos.z + cameraOffset.z
+            );
+            camera.lookAt(pathPos.x, pathPos.y, pathPos.z);
+          }
+        } else if (finalPosition) {
+          // Last 20% moves to final position
+          const finalProgress = (progress - 0.8) / 0.2;
+          const pathPos = getPathPosition(path, 1);
+          
+          object.position.x = pathPos.x + (finalPosition.x - pathPos.x) * finalProgress;
+          object.position.y = pathPos.y + (finalPosition.y - pathPos.y) * finalProgress;
+          object.position.z = pathPos.z + (finalPosition.z - pathPos.z) * finalProgress;
+          
+          // Update camera to follow
+          if (camera) {
+            const cameraOffset = { x: 3, y: 5, z: 3 };
+            camera.position.set(
+              object.position.x + cameraOffset.x,
+              object.position.y + cameraOffset.y,
+              object.position.z + cameraOffset.z
+            );
+            camera.lookAt(object.position.x, object.position.y, object.position.z);
+          }
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          resolve();
+        }
+      }
+      
+      update();
+    });
+  };
+
+  // Run the individual transaction simulation
   const runIndividualSimulation = async () => {
     if (!indivSceneRef.current || !indivCameraRef.current) return;
     
@@ -704,119 +741,133 @@ const EthereumTransactionBatching = () => {
       // Move camera to focus on mempool
       await animateCamera(
         camera,
-        { x: -35, y: 15, z: 15 },  // Updated to new mempool position
-        { x: -35, y: 0, z: 0 },    // Updated to new mempool position
+        { x: -22, y: 15, z: 15 }, // Updated for new mempool position
+        { x: -22, y: 0, z: 0 },
         1500
       );
       
       const transactions = generateTransactions(indivSceneRef.current, indivMempoolRef, indivTransactionsRef);
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Step 2: Sort transactions by fee (highest first)
+      // Step 2: Sort transactions by fee
       setStep(2);
-      setExplanation('Step 2: Transactions are sorted by fee (highest fee first)');
+      setExplanation('Step 2: Transactions are sorted by fee for individual processing');
       
-      // Highlight each transaction briefly to simulate analysis
+      // Highlight each transaction briefly to simulate sorting
       for (const tx of transactions) {
         const originalColor = tx.material.color.clone();
         tx.material.color.set(0xffffff);
-        await new Promise(resolve => setTimeout(resolve, 30));
+        await new Promise(resolve => setTimeout(resolve, 30)); // faster highlighting
         tx.material.color.copy(originalColor);
       }
       
-      // Sort transactions by fee (highest first)
-      transactions.sort((a, b) => b.userData.fee - a.userData.fee);
+      // Sort transactions by fee (color)
+      transactions.sort((a, b) => {
+        const colorA = new THREE.Color(a.material.color.getHex());
+        const colorB = new THREE.Color(b.material.color.getHex());
+        
+        // Use hue as a proxy for fee amount
+        const hueA = new THREE.Color(colorA).getHSL({}).h;
+        const hueB = new THREE.Color(colorB).getHSL({}).h;
+        
+        // Higher fee (more red/orange) gets priority
+        return hueB - hueA;
+      });
       
-      // Show sorting animation - move higher fee transactions slightly up
-      const sortingPromises = [];
-      for (let i = 0; i < transactions.length; i++) {
-        const tx = transactions[i];
-        const sortHeight = 0.2 + (transactions.length - i) * 0.05; // Higher fee = higher position
-        sortingPromises.push(
-          animatePosition(tx, {
-            x: tx.position.x,
-            y: tx.position.y + sortHeight,
-            z: tx.position.z
-          }, 500)
-        );
-      }
-      
-      await Promise.all(sortingPromises);
+      // Briefly pause after sorting
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Step 3: Process transactions by filling blocks sequentially
+      // Step 3: Process transactions individually
       setStep(3);
-      setExplanation('Step 3: Transactions fill blocks sequentially by fee (traditional method)');
+      setExplanation('Step 3: Transactions are processed sequentially into blocks');
       
-      // Move camera to midway position to see paths between mempool and blockchain
+      // Move camera to see both mempool and blockchain
       await animateCamera(
         camera,
-        { x: -5, y: 25, z: 20 }, // Updated midway position to account for wider spacing
-        { x: -5, y: 0, z: 0 },
+        { x: -5, y: 20, z: 20 }, // Position to see both mempool and blockchain
+        { x: 0, y: 0, z: 0 },
         1500
       );
       
       // Create two blocks to fill
-      const blocks = [
-        { position: { x: 15, y: 0, z: -3 }, transactions: [] }, // Adjusted position to match createBlockchain
-        { position: { x: 15, y: 0, z: 3 }, transactions: [] }
-      ];
+      const blockGeo = new THREE.BoxGeometry(4, 1.5, 4);
+      const blockMat = new THREE.MeshPhongMaterial({
+        color: 0xf8fafc,
+        transparent: true,
+        opacity: 0.9,
+        emissive: 0xf1f5f9,
+        emissiveIntensity: 0.2,
+      });
       
-      let currentBlockIndex = 0;
+      // Create two empty blocks in the blockchain
+      const block1 = new THREE.Mesh(blockGeo, blockMat.clone());
+      block1.position.set(15, 0, -3);
+      indivSceneRef.current.add(block1);
       
-      // Process transactions in fee order
-      for (let txIndex = 0; txIndex < transactions.length; txIndex++) {
-        const tx = transactions[txIndex];
+      const block2 = new THREE.Mesh(blockGeo, blockMat.clone());
+      block2.position.set(15, 0, 3);
+      indivSceneRef.current.add(block2);
+      
+      // Process transactions one by one, filling blocks sequentially
+      let block1Count = 0;
+      let block2Count = 0;
+      
+      for (let i = 0; i < transactions.length; i++) {
+        const tx = transactions[i];
         
-        // Focus camera on current transaction with smoother motion
-        await animateCamera(
-          camera,
-          { 
-            x: tx.position.x + 3, // Reduced offset for closer view
-            y: txIndex === 0 ? 12 : 10, // Higher on first transaction for context
-            z: tx.position.z + 3  // Reduced offset for closer view
-          },
-          { x: tx.position.x, y: tx.position.y, z: tx.position.z },
-          txIndex === 0 ? 800 : 400 // Longer for first transaction, quicker for subsequent ones
-        );
+        // Determine which block to place this transaction in (alternate)
+        const targetBlock = i % 2 === 0 ? block1 : block2;
+        const count = i % 2 === 0 ? block1Count++ : block2Count++;
         
-        // Highlight the active transaction
-        tx.material.color.set(0x22c55e); // Bright green
+        // Calculate position within block
+        const rowCol = count < 3 ? 
+          { row: 0, col: count } : 
+          { row: 1, col: count - 3 };
+        
+        // Calculate final position inside the block
+        const finalPosition = {
+          x: targetBlock.position.x - 1 + rowCol.col * 0.8,
+          y: targetBlock.position.y + 0.5 + rowCol.row * 0.4, // Flatter for top-down visibility
+          z: targetBlock.position.z - 0.5 + rowCol.row * 0.5
+        };
+        
+        // Highlight transaction being processed
+        const originalColor = tx.material.color.clone();
+        const originalEmissive = tx.material.emissive.clone();
+        const originalEmissiveIntensity = tx.material.emissiveIntensity;
+        
+        tx.material.color.set(0x22c55e);
         tx.material.emissive.set(0x15803d);
         tx.material.emissiveIntensity = 0.5;
         
-        // Add visual indicator for active transaction
-        const indicatorGeo = new THREE.TorusGeometry(0.8, 0.1, 16, 32);
-        const indicatorMat = new THREE.MeshBasicMaterial({
-          color: 0x22c55e,
-          transparent: true,
-          opacity: 0.7
-        });
-        const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
-        indicator.position.set(tx.position.x, tx.position.y + 0.5, tx.position.z);
-        indicator.rotation.x = Math.PI / 2;
-        indivSceneRef.current.add(indicator);
+        // Short pause before processing this transaction
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-        // Determine which block to fill
-        const currentBlock = blocks[currentBlockIndex];
-        currentBlock.transactions.push(tx);
+        // Focus camera on current transaction
+        await animateCamera(
+          camera,
+          { x: tx.position.x, y: 10, z: tx.position.z + 5 },
+          { x: tx.position.x, y: tx.position.y, z: tx.position.z },
+          600
+        );
         
-        // If current block is full (10 transactions), move to next block
-        if (currentBlock.transactions.length >= 10) {
-          currentBlockIndex = (currentBlockIndex + 1) % blocks.length;
-        }
+        // Scale down transaction for block
+        tx.scale.set(0.5, 0.5, 0.5);
         
-        // Add a visual connection line between transaction and target block
+        // Create path to block
+        const pathCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(tx.position.x, tx.position.y, tx.position.z),
+          new THREE.Vector3((tx.position.x + finalPosition.x) * 0.5, 
+                           Math.max(tx.position.y, finalPosition.y) + 3, // Arc height
+                           (tx.position.z + finalPosition.z) * 0.5),
+          new THREE.Vector3(finalPosition.x, finalPosition.y, finalPosition.z)
+        ]);
+        
+        // Create visual path
         const pathGeo = new THREE.TubeGeometry(
-          new THREE.CatmullRomCurve3([
-            new THREE.Vector3(tx.position.x, tx.position.y, tx.position.z),
-            new THREE.Vector3((tx.position.x + currentBlock.position.x) * 0.5, 
-                             tx.position.y + 3, // Lower arc height for top-down view
-                             (tx.position.z + currentBlock.position.z) * 0.5),
-            new THREE.Vector3(currentBlock.position.x, currentBlock.position.y + 2, currentBlock.position.z)
-          ]),
+          pathCurve,
           64, // path segments
-          0.1, // tube radius
+          0.05, // tube radius
           8, // tubular segments
           false // closed
         );
@@ -824,162 +875,65 @@ const EthereumTransactionBatching = () => {
         const pathMat = new THREE.MeshBasicMaterial({
           color: 0x22c55e,
           transparent: true,
-          opacity: 0.6,
+          opacity: 0.4,
         });
         
         const path = new THREE.Mesh(pathGeo, pathMat);
         indivSceneRef.current.add(path);
         
-        // Move camera to follow the path
-        await animateCamera(
+        // Follow transaction with camera
+        await animateAlongPath(
+          tx,
+          pathCurve,
+          1000, // Slower animation for individual processing
           camera,
-          { x: currentBlock.position.x - 5, y: 12, z: currentBlock.position.z + 5 },
-          { x: currentBlock.position.x, y: 0, z: currentBlock.position.z },
-          600
+          finalPosition
         );
         
-        // Calculate final position in blockchain block
-        if (!indivBlockRef.current) continue;
-        
-        const txCountInBlock = currentBlock.transactions.length - 1; // Current position in block
-        const finalPosition = {
-          x: currentBlock.position.x - 1 + (txCountInBlock % 5) * 0.4,
-          y: currentBlock.position.y + 0.5 + Math.floor(txCountInBlock / 5) * 0.4,
-          z: currentBlock.position.z - 0.5 + Math.floor(txCountInBlock / 5) * 0.3
-        };
-        
-        // Scale down transaction for block
-        tx.scale.set(0.4, 0.4, 0.4);
-        
-        // Get position along the path
-        const getPathPosition = (progress) => {
-          // Sample the path at the given progress (0-1)
-          const point = pathGeo.parameters.path.getPointAt(progress);
-          
-          return {
-            x: point.x,
-            y: point.y,
-            z: point.z
-          };
-        };
-        
-        // Animate along the path
-        const pathAnimationDuration = 600;
-        const pathStartTime = Date.now();
-        
-        await new Promise(resolve => {
-          function updatePath() {
-            const elapsed = Date.now() - pathStartTime;
-            const progress = Math.min(elapsed / pathAnimationDuration, 1);
-            
-            // Get position along the path
-            if (progress < 0.8) {
-              // First 80% of animation follows the path
-              const pathProgress = progress / 0.8;
-              const pathPos = getPathPosition(pathProgress);
-              tx.position.set(pathPos.x, pathPos.y, pathPos.z);
-            } else {
-              // Last 20% moves to final position
-              const finalProgress = (progress - 0.8) / 0.2;
-              const pathPos = getPathPosition(1);
-              
-              tx.position.x = pathPos.x + (finalPosition.x - pathPos.x) * finalProgress;
-              tx.position.y = pathPos.y + (finalPosition.y - pathPos.y) * finalProgress;
-              tx.position.z = pathPos.z + (finalPosition.z - pathPos.z) * finalProgress;
-            }
-            
-            if (progress < 1) {
-              requestAnimationFrame(updatePath);
-            } else {
-              resolve();
-            }
-          }
-          
-          updatePath();
-        });
-        
-        // Increment counter for statistics
-        transactionsProcessed++;
-        
-        // Remove the path and indicator
+        // Remove path
         indivSceneRef.current.remove(path);
-        indivSceneRef.current.remove(indicator);
         
         // Reset transaction material
-        tx.material.color.set(0x94a3b8); // Gray out processed transaction
-        tx.material.emissive.set(0x64748b);
-        tx.material.emissiveIntensity = 0.1;
+        tx.material.color.copy(originalColor);
+        tx.material.emissive.copy(originalEmissive);
+        tx.material.emissiveIntensity = originalEmissiveIntensity;
         
-        // Show transaction count and time in UI
-        const currentTime = performance.now();
-        const elapsed = ((currentTime - startTime) / 1000).toFixed(1);
-        setExplanation(`Processed ${transactionsProcessed}/${transactions.length} transactions (${elapsed}s elapsed)`);
+        // Update transactions processed count
+        transactionsProcessed++;
         
-        // Small pause between transactions
-        await new Promise(resolve => setTimeout(resolve, 150));
+        // Add visual indicator for processed transaction
+        const indicatorGeo = new THREE.RingGeometry(0.3, 0.4, 16);
+        const indicatorMat = new THREE.MeshBasicMaterial({
+          color: 0x22c55e,
+          transparent: true,
+          opacity: 0.7,
+          side: THREE.DoubleSide
+        });
         
-        // If we've filled a block (10 transactions), pause to show the filled block
-        if (txIndex > 0 && txIndex % 10 === 9) {
-          // Highlight the filled block
-          if (indivBlockRef.current) {
-            // Move camera to focus on the filled block
-            await animateCamera(
-              camera,
-              { x: indivBlockRef.current.position.x - 5, y: 8, z: indivBlockRef.current.position.z + 5 },
-              { x: indivBlockRef.current.position.x, y: 0, z: indivBlockRef.current.position.z },
-              800
-            );
-            
-            // Add visual completion effect for filled block
-            const blockCompletionFlash = new THREE.Mesh(
-              new THREE.SphereGeometry(1, 16, 16),
-              new THREE.MeshBasicMaterial({
-                color: 0x10b981,
-                transparent: true,
-                opacity: 0.8
-              })
-            );
-            blockCompletionFlash.position.set(
-              indivBlockRef.current.position.x,
-              indivBlockRef.current.position.y + 1,
-              indivBlockRef.current.position.z
-            );
-            indivSceneRef.current.add(blockCompletionFlash);
-            
-            // Animate the flash growing and fading
-            const animateBlockFlash = () => {
-              return new Promise(resolve => {
-                let scale = 1;
-                let opacity = 0.8;
-                const flashInterval = setInterval(() => {
-                  scale += 0.2;
-                  opacity -= 0.1;
-                  blockCompletionFlash.scale.set(scale, scale, scale);
-                  blockCompletionFlash.material.opacity = opacity;
-                  
-                  if (opacity <= 0) {
-                    clearInterval(flashInterval);
-                    indivSceneRef.current.remove(blockCompletionFlash);
-                    resolve();
-                  }
-                }, 50);
-              });
-            };
-            
-            // Run block flash animation
-            await animateBlockFlash();
-            
-            const filledBlockIndex = Math.floor(txIndex / 10);
-            // Flash the block
-            for (let flash = 0; flash < 3; flash++) {
-              indivBlockRef.current.material.emissiveIntensity = 0.5;
-              await new Promise(resolve => setTimeout(resolve, 100));
-              indivBlockRef.current.material.emissiveIntensity = 0.2;
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          }
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+        const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
+        indicator.position.set(finalPosition.x, finalPosition.y + 0.5, finalPosition.z);
+        indicator.rotation.x = Math.PI / 2;
+        indivSceneRef.current.add(indicator);
+        
+        // Fade out indicator
+        const fadeOutIndicator = () => {
+          return new Promise(resolve => {
+            let opacity = 0.7;
+            const fadeInterval = setInterval(() => {
+              opacity -= 0.05;
+              indicatorMat.opacity = opacity;
+              
+              if (opacity <= 0) {
+                clearInterval(fadeInterval);
+                indivSceneRef.current.remove(indicator);
+                resolve();
+              }
+            }, 50);
+          });
+        };
+        
+        // Let indicator fade out while continuing to next transaction
+        fadeOutIndicator();
       }
       
       // Show block is mined - focus on the blockchain
@@ -1002,23 +956,28 @@ const EthereumTransactionBatching = () => {
         1500
       );
       
-      // Calculate final statistics
-      const endTime = performance.now();
-      const totalTimeIndividual = endTime - startTime;
-      
-      setComparisonStats(prevStats => ({
-        ...prevStats,
-        individual: {
-          time: totalTimeIndividual,
-          count: transactionsProcessed
-        }
-      }));
-      
-      setExplanation(`Individual processing complete: ${transactionsProcessed} transactions in ${(totalTimeIndividual/1000).toFixed(1)}s`);
+      // Wait for a moment to show the completed state
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Calculate final statistics
+      const endTime = performance.now();
+      const totalTimeIndividual = ((endTime - startTime) / 1000).toFixed(1);
+      
+      // Final overview and summary
+      await animateCamera(
+        camera,
+        { x: 0, y: 30, z: 20 },
+        { x: 0, y: 0, z: 0 },
+        1000
+      );
+      
+      // Show final message
+      setExplanation(`Individual Processing: ${transactionsProcessed} transactions processed in ${totalTimeIndividual}s`);
+      
+      return { transactionsProcessed, time: parseFloat(totalTimeIndividual) };
     } catch (error) {
-      console.error("Individual simulation error:", error);
+      console.error('Error in individual simulation:', error);
+      return { transactionsProcessed: 0, time: 0 };
     }
   };
   
@@ -1041,13 +1000,13 @@ const EthereumTransactionBatching = () => {
       
       // Step 1: Generate transactions in mempool
       setStep(1);
-      setExplanation('Step 1: Transactions enter the mempool (Batch Processing with EigenLayer AVS)');
+      setExplanation('Step 1: Transactions enter the mempool (Batch Processing)');
       
       // Move camera to focus on mempool
       await animateCamera(
         camera,
-        { x: -35, y: 15, z: 15 },  // Updated to new mempool position
-        { x: -35, y: 0, z: 0 },    // Updated to new mempool position
+        { x: -22, y: 15, z: 15 }, // Updated camera position to match new mempool position
+        { x: -22, y: 0, z: 0 },
         1500
       );
       
@@ -1056,7 +1015,7 @@ const EthereumTransactionBatching = () => {
       
       // Step 2: Analyze transactions
       setStep(2);
-      setExplanation('Step 2: Transactions are analyzed for state conflicts using EigenLayer AVS compute');
+      setExplanation('Step 2: Transactions are analyzed for state conflicts');
       
       // Highlight each transaction briefly to simulate analysis
       for (const tx of transactions) {
@@ -1070,13 +1029,13 @@ const EthereumTransactionBatching = () => {
       
       // Step 3: Batch transactions
       setStep(3);
-      setExplanation('Step 3: EigenLayer AVS batches transactions based on state compatibility for parallel processing');
+      setExplanation('Step 3: Transactions are batched based on compatibility');
       
-      // Move camera to focus on batching area with a wider view to see transactions coming from mempool
+      // Move camera to focus on batching area
       await animateCamera(
         camera,
-        { x: -15, y: 20, z: 15 }, // Adjusted position to see mempool and batching area with wider view
-        { x: -10, y: 0, z: 0 },  // Adjusted target to allow seeing both mempool and batching area
+        { x: 5, y: 15, z: 15 }, // Updated to match new batching area position
+        { x: 5, y: 0, z: 0 },
         1500
       );
       
@@ -1091,9 +1050,7 @@ const EthereumTransactionBatching = () => {
       }
       
       // FIRST PHASE: Move all transactions to their respective batches
-      // Process batches in parallel for faster animation
-      const batchingPromises = [];
-      
+      // Process batches in sequence for better visualization
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         const batch = batches[batchIndex];
         const batchContainer = batchContainersRef.current[batchIndex];
@@ -1102,70 +1059,108 @@ const EthereumTransactionBatching = () => {
           // Highlight batch and focus camera on it
           batchContainer.material.color.set(0x10b981);
           
+          // Calculate global position of batch container
+          const batchPosition = new THREE.Vector3();
+          batchContainer.getWorldPosition(batchPosition);
+          
+          // Add batching area offset (since containers are children of batching area)
+          batchPosition.x += 5; // Add the x-offset of batching area
+          
           await animateCamera(
             camera,
-            { x: batchContainer.position.x, y: 10, z: batchContainer.position.z + 10 },
-            { x: batchContainer.position.x, y: 0, z: batchContainer.position.z },
+            { x: batchPosition.x, y: 10, z: batchPosition.z + 10 },
+            { x: batchPosition.x, y: 0, z: batchPosition.z },
             600
           );
         
-          // Create promises for all transactions in this batch
-        for (let txIndex = 0; txIndex < batch.length; txIndex++) {
-          const tx = batch[txIndex];
-          
+          // Move transactions to batch in sequence
+          for (let txIndex = 0; txIndex < batch.length; txIndex++) {
+            const tx = batch[txIndex];
+            
             // Calculate position in batch container
-          const rowCol = txIndex < 3 ? 
-            { row: 0, col: txIndex } : 
-            { row: 1, col: txIndex - 3 };
-          
+            const rowCol = txIndex < 3 ? 
+              { row: 0, col: txIndex } : 
+              { row: 1, col: txIndex - 3 };
+            
             // Position relative to batch container
-            const batchPos = batchContainer.position;
+            const batchPos = batchPosition;
             const batchTargetPosition = {
               x: batchPos.x - 1.5 + rowCol.col * 1.2,
               y: batchPos.y + 0.5,
               z: batchPos.z - 1.5 + rowCol.row * 1.5
             };
             
-            // Create a promise for this transaction's animation
-            const animationPromise = (async () => {
-              // Animate to batch with faster arc motion
-              const midPoint = {
-                x: (tx.position.x + batchTargetPosition.x) * 0.5,
-                y: Math.max(tx.position.y, batchTargetPosition.y) + 3, // Lower arc height for top-down view
-                z: (tx.position.z + batchTargetPosition.z) * 0.5
-              };
-              
-              // First animate up in an arc
-              await animatePosition(tx, {
-                x: midPoint.x,
-                y: midPoint.y,
-                z: midPoint.z
-              }, 500); // Faster animation
-              
-              // Then animate down to batch position
-              await animatePosition(tx, batchTargetPosition, 500); // Faster animation
-            })();
+            // Highlight current transaction
+            const originalColor = tx.material.color.clone();
+            const originalEmissive = tx.material.emissive.clone();
+            const originalEmissiveIntensity = tx.material.emissiveIntensity;
             
-            batchingPromises.push(animationPromise);
+            tx.material.color.set(0x22c55e);
+            tx.material.emissive.set(0x15803d);
+            tx.material.emissiveIntensity = 0.5;
+            
+            // Create path to batch container
+            const pathCurve = new THREE.CatmullRomCurve3([
+              new THREE.Vector3(tx.position.x, tx.position.y, tx.position.z),
+              new THREE.Vector3((tx.position.x + batchTargetPosition.x) * 0.5, 
+                             Math.max(tx.position.y, batchTargetPosition.y) + 4, // Higher arc for longer travel distance
+                             (tx.position.z + batchTargetPosition.z) * 0.5),
+              new THREE.Vector3(batchTargetPosition.x, batchTargetPosition.y, batchTargetPosition.z)
+            ]);
+            
+            // Create visual path
+            const pathGeo = new THREE.TubeGeometry(
+              pathCurve,
+              64, // path segments
+              0.05, // tube radius
+              8, // tubular segments
+              false // closed
+            );
+            
+            const pathMat = new THREE.MeshBasicMaterial({
+              color: 0x22c55e,
+              transparent: true,
+              opacity: 0.4,
+            });
+            
+            const path = new THREE.Mesh(pathGeo, pathMat);
+            batchSceneRef.current.add(path);
+            
+            // Follow transaction with camera
+            await animateAlongPath(
+              tx,
+              pathCurve,
+              800,
+              camera,
+              batchTargetPosition
+            );
+            
+            // Remove path
+            batchSceneRef.current.remove(path);
+            
+            // Reset transaction color
+            tx.material.color.copy(originalColor);
+            tx.material.emissive.copy(originalEmissive);
+            tx.material.emissiveIntensity = originalEmissiveIntensity;
+            
+            // Small delay between transactions
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
       }
       
-      // Wait for all batching animations to complete
-      await Promise.all(batchingPromises);
-      
       // Short pause after all transactions are batched
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Step 4: Submit batches to blockchain
       setStep(4);
-      setExplanation('Step 4: EigenLayer AVS submits optimized transaction batches to the new block');
+      setExplanation('Step 4: Batched transactions are added to the new block');
       
       // Move camera to see both batching area and blockchain
       await animateCamera(
         camera,
-        { x: 5, y: 20, z: 20 },
-        { x: 5, y: 0, z: 0 },
+        { x: 10, y: 20, z: 20 }, // Adjusted to see both batching area and blockchain
+        { x: 10, y: 0, z: 0 },
         1500
       );
       
@@ -1180,11 +1175,18 @@ const EthereumTransactionBatching = () => {
           batchContainer.material.emissive.set(0x15803d);
           batchContainer.material.emissiveIntensity = 0.5;
           
+          // Calculate global position of batch container
+          const batchPosition = new THREE.Vector3();
+          batchContainer.getWorldPosition(batchPosition);
+          
+          // Add batching area offset (since containers are children of batching area)
+          batchPosition.x += 5; // Add the x-offset of batching area
+          
           // Focus camera on active batch
           await animateCamera(
             camera,
-            { x: batchContainer.position.x, y: 10, z: batchContainer.position.z + 8 },
-            { x: batchContainer.position.x, y: 1, z: batchContainer.position.z },
+            { x: batchPosition.x, y: 10, z: batchPosition.z + 8 },
+            { x: batchPosition.x, y: 1, z: batchPosition.z },
             800
           );
           
@@ -1196,7 +1198,7 @@ const EthereumTransactionBatching = () => {
             opacity: 0.7
           });
           const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
-          indicator.position.set(batchContainer.position.x, batchContainer.position.y + 1, batchContainer.position.z);
+          indicator.position.set(batchPosition.x, batchPosition.y + 1, batchPosition.z);
           indicator.rotation.x = Math.PI / 2;
           batchSceneRef.current.add(indicator);
           
@@ -1215,9 +1217,9 @@ const EthereumTransactionBatching = () => {
           
           // Group transactions visually before sending to blockchain
           const groupCenter = new THREE.Vector3(
-            batchContainer.position.x,
-            batchContainer.position.y + 1.5,
-            batchContainer.position.z
+            batchPosition.x,
+            batchPosition.y + 1.5,
+            batchPosition.z
           );
           
           // First gather transactions in formation above batch
@@ -1249,20 +1251,23 @@ const EthereumTransactionBatching = () => {
           // Move camera to follow batch to blockchain
           await animateCamera(
             camera,
-            { x: (batchContainer.position.x + batchBlockRef.current.position.x) / 2, y: 15, z: 15 },
-            { x: (batchContainer.position.x + batchBlockRef.current.position.x) / 2, y: 0, z: 0 },
+            { x: (batchPosition.x + batchBlockRef.current.position.x) / 2, y: 15, z: 15 },
+            { x: (batchPosition.x + batchBlockRef.current.position.x) / 2, y: 0, z: 0 },
             800
           );
           
-          // Add a visual connection line between batch and blockchain
+          // Create path between batch and blockchain
+          const pathCurve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(batchPosition.x, batchPosition.y + 1.5, batchPosition.z),
+            new THREE.Vector3((batchPosition.x + batchBlockRef.current.position.x) * 0.5, 
+                              batchPosition.y + 3, 
+                              (batchPosition.z + batchBlockRef.current.position.z) * 0.5),
+            new THREE.Vector3(batchBlockRef.current.position.x, batchBlockRef.current.position.y + 2, batchBlockRef.current.position.z)
+          ]);
+          
+          // Create visual representation of the path
           const pathGeo = new THREE.TubeGeometry(
-            new THREE.CatmullRomCurve3([
-              new THREE.Vector3(batchContainer.position.x, batchContainer.position.y + 1.5, batchContainer.position.z),
-              new THREE.Vector3((batchContainer.position.x + batchBlockRef.current.position.x) * 0.5, 
-                                batchContainer.position.y + 3, 
-                                (batchContainer.position.z + batchBlockRef.current.position.z) * 0.5),
-              new THREE.Vector3(batchBlockRef.current.position.x, batchBlockRef.current.position.y + 2, batchBlockRef.current.position.z)
-            ]),
+            pathCurve,
             64, // path segments
             0.1, // tube radius
             8, // tubular segments
@@ -1272,32 +1277,11 @@ const EthereumTransactionBatching = () => {
           const pathMat = new THREE.MeshBasicMaterial({
             color: 0x22c55e,
             transparent: true,
-            opacity: 0,
+            opacity: 0.6,
           });
           
           const path = new THREE.Mesh(pathGeo, pathMat);
           batchSceneRef.current.add(path);
-          
-          // Fade in path
-          const fadeInPath = () => {
-            return new Promise(resolve => {
-              let opacity = 0;
-              const fadeInterval = setInterval(() => {
-                opacity += 0.05;
-                pathMat.opacity = opacity;
-                
-                if (opacity >= 0.6) {
-                  clearInterval(fadeInterval);
-                  resolve();
-                }
-              }, 30);
-            });
-          };
-          
-          await fadeInPath();
-          
-          // Now move transactions to blockchain along the path
-          const blockchainPromises = [];
           
           // Focus camera on blockchain target
           await animateCamera(
@@ -1331,124 +1315,22 @@ const EthereumTransactionBatching = () => {
           for (let txIndex = 0; txIndex < batch.length; txIndex++) {
             const tx = batch[txIndex];
             
-            // Create a promise for this transaction's animation
-            const animationPromise = (async () => {
-              // Small delay based on index for staggered effect
-              await new Promise(resolve => setTimeout(resolve, txIndex * 50));
+            // Small delay based on index for staggered effect
+            await new Promise(resolve => setTimeout(resolve, txIndex * 50));
               
-              // Get position along the path
-              const getPathPosition = (progress) => {
-                // Sample the path at the given progress (0-1)
-                const point = pathGeo.parameters.path.getPointAt(progress);
-                
-                return {
-                  x: point.x,
-                  y: point.y,
-                  z: point.z
-                };
-              };
-              
-              // Animate along the path
-              const startTime = Date.now();
-              const duration = 800;
-              
-              return new Promise(resolve => {
-                function update() {
-                  const elapsed = Date.now() - startTime;
-                  const progress = Math.min(elapsed / duration, 1);
-                  
-                  // Get position along the path
-                  if (progress < 0.8) {
-                    // First 80% of animation follows the path
-                    const pathProgress = progress / 0.8;
-                    const pathPos = getPathPosition(pathProgress);
-                    tx.position.set(pathPos.x, pathPos.y, pathPos.z);
-                  } else {
-                    // Last 20% moves to final position
-                    const finalProgress = (progress - 0.8) / 0.2;
-                    const finalPos = finalPositions[txIndex];
-                    const pathPos = getPathPosition(1);
-                    
-                    tx.position.x = pathPos.x + (finalPos.x - pathPos.x) * finalProgress;
-                    tx.position.y = pathPos.y + (finalPos.y - pathPos.y) * finalProgress;
-                    tx.position.z = pathPos.z + (finalPos.z - pathPos.z) * finalProgress;
-                  }
-                  
-                  if (progress < 1) {
-                    requestAnimationFrame(update);
-                  } else {
-                    resolve();
-                  }
-                }
-                
-                update();
-              });
-            })();
-            
-            blockchainPromises.push(animationPromise);
+            // Animate along the path with camera following
+            await animateAlongPath(
+              tx, 
+              pathCurve,
+              800, 
+              camera,
+              finalPositions[txIndex]
+            );
           }
           
-          // Wait for all transactions in this batch to move to blockchain
-          await Promise.all(blockchainPromises);
-          
-          // Add a visual effect to show batch completion
-          const completionFlash = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 16, 16),
-            new THREE.MeshBasicMaterial({
-              color: 0x10b981,
-              transparent: true,
-              opacity: 0.8
-            })
-          );
-          completionFlash.position.set(
-            batchBlockRef.current.position.x,
-            batchBlockRef.current.position.y + 1,
-            batchBlockRef.current.position.z
-          );
-          batchSceneRef.current.add(completionFlash);
-          
-          // Animate the flash effect
-          const animateFlash = () => {
-            return new Promise(resolve => {
-              let scale = 1;
-              let opacity = 0.8;
-              const flashInterval = setInterval(() => {
-                scale += 0.2;
-                opacity -= 0.1;
-                completionFlash.scale.set(scale, scale, scale);
-                completionFlash.material.opacity = opacity;
-                
-                if (opacity <= 0) {
-                  clearInterval(flashInterval);
-                  batchSceneRef.current.remove(completionFlash);
-                  resolve();
-                }
-              }, 50);
-            });
-          };
-          
-          // Run the flash animation
-          await animateFlash();
-          
-          // Fade out and remove path
-          const fadeOutPath = () => {
-            return new Promise(resolve => {
-              let opacity = pathMat.opacity;
-              const fadeInterval = setInterval(() => {
-                opacity -= 0.05;
-                pathMat.opacity = opacity;
-                
-                if (opacity <= 0) {
-                  clearInterval(fadeInterval);
-                  batchSceneRef.current.remove(path);
-                  batchSceneRef.current.remove(indicator);
-                  resolve();
-                }
-              }, 30);
-            });
-          };
-          
-          await fadeOutPath();
+          // Remove path and indicator
+          batchSceneRef.current.remove(path);
+          batchSceneRef.current.remove(indicator);
           
           // Reset batch container color
           batchContainer.material.color.set(0xe2e8f0);
@@ -1480,23 +1362,28 @@ const EthereumTransactionBatching = () => {
         1500
       );
       
-      // Calculate final statistics
-      const endTime = performance.now();
-      const totalTimeBatch = endTime - startTime;
-      
-      setComparisonStats(prevStats => ({
-        ...prevStats,
-        batch: {
-          time: totalTimeBatch,
-          count: transactionsProcessed
-        }
-      }));
-      
-      setExplanation(`Batch processing with EigenLayer AVS complete: ${transactionsProcessed} transactions in ${(totalTimeBatch/1000).toFixed(1)}s`);
+      // Wait for a moment to show the completed state
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Calculate final statistics
+      const endTime = performance.now();
+      const totalTimeBatch = ((endTime - startTime) / 1000).toFixed(1);
+      
+      // Final overview and summary
+      await animateCamera(
+        camera,
+        { x: 0, y: 30, z: 20 },
+        { x: 0, y: 0, z: 0 },
+        1000
+      );
+      
+      // Show final message
+      setExplanation(`Batch Processing: ${transactionsProcessed} transactions processed in ${totalTimeBatch}s`);
+      
+      return { transactionsProcessed, time: parseFloat(totalTimeBatch) };
     } catch (error) {
-      console.error("Batch simulation error:", error);
+      console.error('Error in batch simulation:', error);
+      return { transactionsProcessed: 0, time: 0 };
     }
   };
   
@@ -1508,10 +1395,26 @@ const EthereumTransactionBatching = () => {
     setComparisonStats(null);
     
     try {
-      await Promise.all([
+      const [batchResults, individualResults] = await Promise.all([
         runBatchSimulation(),
         runIndividualSimulation()
       ]);
+      
+      // Calculate speedup and set complete stats
+      if (batchResults && individualResults) {
+        const speedup = individualResults.time / batchResults.time;
+        setComparisonStats({
+          batch: {
+            time: batchResults.time,
+            transactionsProcessed: batchResults.transactionsProcessed
+          },
+          individual: {
+            time: individualResults.time,
+            transactionsProcessed: individualResults.transactionsProcessed
+          },
+          speedup
+        });
+      }
     } catch (error) {
       console.error("Comparison error:", error);
     } finally {
@@ -1527,11 +1430,12 @@ const EthereumTransactionBatching = () => {
       return null;
     }
     
-    const batchTime = comparisonStats.batch.time / 1000;
-    const individualTime = comparisonStats.individual.time / 1000;
+    const batchTime = parseFloat(comparisonStats.batch.time);
+    const individualTime = parseFloat(comparisonStats.individual.time);
+    const speedup = individualTime / batchTime;
     const efficiency = ((individualTime - batchTime) / individualTime * 100).toFixed(1);
 
-  return (
+    return (
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mt-4">
         <h3 className="font-bold text-blue-800 mb-2">Performance Comparison</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -1541,101 +1445,308 @@ const EthereumTransactionBatching = () => {
             <div className="text-xs text-gray-500">{comparisonStats.individual.count} transactions</div>
           </div>
           <div className="bg-white p-3 rounded shadow-sm">
-            <div className="text-sm text-gray-600">Batch Processing (EigenLayer AVS)</div>
+            <div className="text-sm text-gray-600">Batch Processing</div>
             <div className="text-lg font-bold text-green-600">{batchTime.toFixed(1)}s</div>
             <div className="text-xs text-gray-500">{comparisonStats.batch.count} transactions</div>
           </div>
         </div>
         <div className="mt-3 text-center bg-green-100 p-2 rounded">
           <span className="font-bold text-green-700">
-            EigenLayer AVS batching is {efficiency}% faster!
+            Batching is {efficiency}% faster ({speedup.toFixed(1)}x)!
           </span>
-        </div>
-        <div className="mt-2 text-xs text-gray-600 text-center">
-          EigenLayer's Actively Validated Services (AVS) provide distributed compute resources that make transaction batching significantly faster.
         </div>
       </div>
     );
   };
 
+  // Reset both simulations
+  const resetSimulation = () => {
+    if (isSimulating) return; // Don't reset while simulating
+    
+    setIsResetting(true);
+    
+    // Reset UI state
+    setExplanation('Ready to simulate. Press Start to begin the comparison.');
+    setStep(0);
+    setComparisonStats(null);
+    
+    // Reset scenes
+    if (batchSceneRef.current) {
+      resetScene(batchSceneRef.current);
+    }
+    
+    if (indivSceneRef.current) {
+      resetScene(indivSceneRef.current);
+    }
+    
+    // Reset camera positions
+    if (batchCameraRef.current) {
+      batchCameraRef.current.position.set(0, 40, 10);
+      batchCameraRef.current.lookAt(0, 0, 0);
+    }
+    
+    if (indivCameraRef.current) {
+      indivCameraRef.current.position.set(0, 40, 10);
+      indivCameraRef.current.lookAt(0, 0, 0);
+    }
+    
+    // Reset all refs
+    batchTransactionsRef.current = [];
+    indivTransactionsRef.current = [];
+    
+    setIsResetting(false);
+  };
+
+  // Add a new function to reset the scene
+  const resetScene = (scene: THREE.Scene) => {
+    // Find and remove transaction objects, indicators, paths, etc.
+    const objectsToRemove = [];
+    
+    scene.traverse((object) => {
+      // Keep permanent scene elements like the blockchain and mempool
+      if (object.userData && object.userData.isPermanent) {
+        return;
+      }
+      
+      // Remove temporary objects like transactions, paths, indicators
+      if (object.userData && 
+         (object.userData.isTransaction || 
+          object.userData.isPath || 
+          object.userData.isIndicator || 
+          object.userData.isTemporary)) {
+        objectsToRemove.push(object);
+      }
+    });
+    
+    // Remove the objects from the scene
+    for (const object of objectsToRemove) {
+      scene.remove(object);
+    }
+    
+    return scene;
+  };
+
+  // Add transition effect for step changes
+  const StepTransition = ({ step, children }) => {
+    const [isVisible, setIsVisible] = useState(true);
+    const prevStep = useRef(step);
+    
+    useEffect(() => {
+      if (prevStep.current !== step) {
+        // Step changed, animate transition
+        setIsVisible(false);
+        const timer = setTimeout(() => setIsVisible(true), 400);
+        prevStep.current = step;
+        return () => clearTimeout(timer);
+      }
+    }, [step]);
+    
+    return (
+      <div className={`transition-opacity duration-400 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        {children}
+      </div>
+    );
+  };
+
+  // Update the createLabel function to use CSS2DRenderer
+  const createLabel = (text, position, scene) => {
+    // Create HTML element for the label
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'scene-label';
+    labelDiv.textContent = text;
+    labelDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    labelDiv.style.padding = '4px 8px';
+    labelDiv.style.borderRadius = '4px';
+    labelDiv.style.fontSize = '12px';
+    labelDiv.style.fontWeight = 'bold';
+    labelDiv.style.color = '#1e293b';
+    labelDiv.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.1)';
+    labelDiv.style.pointerEvents = 'none';
+    
+    // Create CSS2DObject to position the label in 3D space
+    const labelObject = new CSS2DObject(labelDiv);
+    labelObject.position.set(position.x, position.y, position.z);
+    labelObject.userData = { isLabel: true, isPermanent: true };
+    scene.add(labelObject);
+    
+    return labelObject;
+  };
+
+  // Update the initialization of renderers with CSS2DRenderer
+  const setupScene = (mountRef, sceneRef, cameraRef, rendererRef, labelRendererRef, animateFunction) => {
+    if (!mountRef.current) return;
+
+    // Create scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf8fafc);
+    sceneRef.current = scene;
+
+    // Create camera
+    const camera = new THREE.PerspectiveCamera(
+      50, // field of view
+      mountRef.current.clientWidth / mountRef.current.clientHeight, // aspect ratio
+      0.1, // near clipping plane
+      1000 // far clipping plane
+    );
+    camera.position.set(0, 40, 10); // top-down view
+    camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
+
+    // Create renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    rendererRef.current = renderer;
+    
+    // Create CSS2D renderer for labels
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    labelRendererRef.current = labelRenderer;
+    
+    // Clear previous content and append renderers
+    while (mountRef.current.firstChild) {
+      mountRef.current.removeChild(mountRef.current.firstChild);
+    }
+    mountRef.current.appendChild(renderer.domElement);
+    mountRef.current.appendChild(labelRenderer.domElement);
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 5);
+    scene.add(directionalLight);
+
+    // Start animation loop
+    let frameId = null;
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      if (animateFunction) animateFunction();
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    };
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      if (!mountRef.current) return;
+      
+      const width = mountRef.current.clientWidth;
+      const height = mountRef.current.clientHeight;
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      
+      renderer.setSize(width, height);
+      labelRenderer.setSize(width, height);
+    };
+    
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      
+      if (mountRef.current) {
+        while (mountRef.current.firstChild) {
+          mountRef.current.removeChild(mountRef.current.firstChild);
+        }
+      }
+      
+      window.removeEventListener('resize', handleResize);
+    };
+  };
+
   return (
-    <div className="flex flex-col w-full mt-auto bg-white text-gray-900 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold">Ethereum Transaction Processing Comparison</h2>
-        <p className="text-gray-600 mt-2">
-          Comparison of traditional fee-based sequential processing vs. EigenLayer AVS state-based batching for optimized throughput.
-        </p>
-      </div>
-      
-      <div className="flex items-center justify-between p-4 bg-gray-50">
-        <div className="text-sm md:text-base text-gray-700">
-          {explanation}
+    <div className="flex flex-col h-full">
+      {/* Batch Processing Visualization */}
+      <div className="flex-1 relative border-b border-gray-200">
+        <div ref={batchMountRef} className="w-full h-full" />
+        <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm p-2 rounded shadow text-sm">
+          Batch Processing
         </div>
-        <button 
-          onClick={startComparison}
-          disabled={isSimulating}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded disabled:opacity-50"
-          aria-label="Start comparison"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              startComparison();
-            }
-          }}
-        >
-          {isSimulating ? 'Simulating...' : 'Start Comparison'}
-        </button>
       </div>
-      
-      <div className="flex flex-col w-full" style={{ background: '#f8fafc' }}>
-        <div className="w-full h-[275px] relative border-b border-gray-200">
-          <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium z-10">
-            Batch Processing
+
+      {/* Individual Processing Visualization */}
+      <div className="flex-1 relative">
+        <div ref={individualMountRef} className="w-full h-full" />
+        <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm p-2 rounded shadow text-sm">
+          Individual Processing
+        </div>
+      </div>
+
+      {/* Controls and Explanation */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-between items-center">
+          <div className="flex space-x-4">
+            <button
+              onClick={startComparison}
+              disabled={isSimulating || isResetting}
+              className={`px-4 py-2 rounded font-medium ${
+                isSimulating || isResetting
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              aria-label="Start comparison"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  startComparison();
+                }
+              }}
+            >
+              <FontAwesomeIcon icon={isSimulating ? faPause : faPlay} className="mr-2" />
+              {isSimulating ? 'Simulating...' : 'Start Comparison'}
+            </button>
+            
+            <button
+              onClick={resetSimulation}
+              disabled={isSimulating || isResetting}
+              className={`px-4 py-2 rounded font-medium ${
+                isSimulating || isResetting
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-gray-500 hover:bg-gray-600 text-white'
+              }`}
+              aria-label="Reset simulation"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  resetSimulation();
+                }
+              }}
+            >
+              <FontAwesomeIcon icon={faSync} className="mr-2" />
+              Reset
+            </button>
           </div>
-          <div ref={batchMountRef} className="w-full h-full" />
+          
+          {comparisonStats && (
+            <div className="text-sm font-medium">
+              <span className="text-green-600">
+                Batch: {comparisonStats.batch.transactionsProcessed} txs in {comparisonStats.batch.time}s
+              </span>
+              <span className="mx-2">|</span>
+              <span className="text-blue-600">
+                Individual: {comparisonStats.individual.transactionsProcessed} txs in {comparisonStats.individual.time}s
+              </span>
+              <span className="mx-2">|</span>
+              <span className="font-bold">
+                {comparisonStats.speedup > 1
+                  ? `${comparisonStats.speedup.toFixed(1)}x faster with batching`
+                  : `${(1/comparisonStats.speedup).toFixed(1)}x faster with individual processing`}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="w-full h-[275px] relative">
-          <div className="absolute top-2 left-2 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium z-10">
-            Individual Processing
-          </div>
-          <div ref={individualMountRef} className="w-full h-full" />
-        </div>
-      </div>
-      
-      {displayComparisonStats()}
-      
-      <div className="p-4 bg-gray-50 text-sm">
-        <h3 className="font-bold mb-2 text-gray-900">Key Concepts:</h3>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">Transactions in mempool</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 0 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 2 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 4 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">State 3 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-gray-400 rounded-full mr-2"></div>
-            <span className="text-gray-700">Blockchain blocks</span>
-          </li>
-          <li className="flex items-center">
-            <div className="flex items-center h-4 bg-gradient-to-r from-green-400 to-blue-500 w-4 rounded-full mr-2"></div>
-            <span className="text-gray-700">Transaction fee (height = fee size)</span>
-          </li>
-        </ul>
+        
+        <StepTransition step={step}>
+          <div className="mt-3 text-sm text-gray-700">{explanation}</div>
+        </StepTransition>
       </div>
     </div>
   );
