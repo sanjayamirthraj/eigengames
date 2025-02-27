@@ -50,13 +50,13 @@ sol!(
     #[allow(missing_docs)]
     #[sol(rpc)]
     #[derive(Debug, Serialize, Deserialize)]
-    ParallelExecTaskManager,
-    "contracts/out/ParallelExecTaskManager.sol/ParallelExecTaskManager.json"
+    IncredibleSquaringTaskManager,
+    "contracts/out/IncredibleSquaringTaskManager.sol/IncredibleSquaringTaskManager.json"
 );
 
 load_abi!(
-    PARALLEL_EXEC_TASK_MANAGER_ABI_STRING,
-    "contracts/out/ParallelExecTaskManager.sol/ParallelExecTaskManager.json"
+    INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
+    "contracts/out/IncredibleSquaringTaskManager.sol/IncredibleSquaringTaskManager.json"
 );
 
 sol!(

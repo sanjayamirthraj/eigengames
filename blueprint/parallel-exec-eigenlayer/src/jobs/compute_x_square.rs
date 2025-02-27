@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use crate::contexts::client::SignedTaskResponse;
-use crate::contexts::x_square::ParallelExecContext;
+use crate::contexts::x_square::EigenSquareContext;
 use crate::IIncredibleSquaringTaskManager::TaskResponse;
 use crate::{
     IncredibleSquaringTaskManager, ProcessorError, INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
@@ -18,8 +18,6 @@ use color_eyre::Result;
 use eigensdk::crypto_bls::BlsKeyPair;
 use eigensdk::crypto_bls::OperatorId;
 use std::convert::Infallible;
-use crate::contexts::x_square::ParallelExecContext;
-use crate::ParallelExecTaskManager;
 
 /// Sends a signed task response to the BLS Aggregator.
 ///
@@ -32,14 +30,14 @@ use crate::ParallelExecTaskManager;
     id = 0,
     params(task_created_block, quorum_numbers, quorum_threshold_percentage, task_index),
     event_listener(
-        listener = EvmContractEventListener<ParallelExecContext, ParallelExecTaskManager::NewTaskCreated>,
-        instance = ParallelExecTaskManager,
-        abi = PARALLEL_EXEC_TASK_MANAGER_ABI_STRING,
+        listener = EvmContractEventListener<EigenSquareContext, IncredibleSquaringTaskManager::NewTaskCreated>,
+        instance = IncredibleSquaringTaskManager,
+        abi = INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
         pre_processor = convert_event_to_inputs,
     ),
 )]
 pub async fn calculate_task(
-    ctx: ParallelExecContext,
+    ctx: EigenSquareContext,
     task_created_block: u32,
     quorum_numbers: Bytes,
     quorum_threshold_percentage: u8,
@@ -122,7 +120,7 @@ pub fn operator_id_from_key(key: BlsKeyPair) -> OperatorId {
 /// and parse the return type by the index.
 pub async fn convert_event_to_inputs(
     (event, _log): (
-        ParallelExecTaskManager::NewTaskCreated,
+        IncredibleSquaringTaskManager::NewTaskCreated,
         alloy_rpc_types::Log,
     ),
 ) -> Result<Option<(u32, Bytes, u8, u32)>, ProcessorError> {

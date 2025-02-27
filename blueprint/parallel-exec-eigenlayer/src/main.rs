@@ -5,16 +5,16 @@ use blueprint_sdk::logging::info;
 use blueprint_sdk::runners::core::runner::BlueprintRunner;
 use blueprint_sdk::runners::eigenlayer::bls::EigenlayerBLSConfig;
 use blueprint_sdk::utils::evm::get_wallet_provider_http;
-use parallel_exec_blueprint_eigenlayer::constants::{
+use incredible_squaring_blueprint_eigenlayer::constants::{
     AGGREGATOR_PRIVATE_KEY, TASK_MANAGER_ADDRESS,
 };
-use parallel_exec_blueprint_eigenlayer::contexts::aggregator::AggregatorContext;
-use parallel_exec_blueprint_eigenlayer::contexts::client::AggregatorClient;
-use parallel_exec_blueprint_eigenlayer::contexts::x_square::ParallelExecContext;
-use parallel_exec_blueprint_eigenlayer::jobs::compute_x_square::CalculateTaskEventHandler;
-use parallel_exec_blueprint_eigenlayer::jobs::initialize_task::InitializeBlsTaskEventHandler;
-use parallel_exec_blueprint_eigenlayer::ParallelExecTaskManager;
-use parallel_exec_blueprint_eigenlayer::api_client::ApiClient;
+use incredible_squaring_blueprint_eigenlayer::contexts::aggregator::AggregatorContext;
+use incredible_squaring_blueprint_eigenlayer::contexts::client::AggregatorClient;
+use incredible_squaring_blueprint_eigenlayer::contexts::x_square::EigenSquareContext;
+use incredible_squaring_blueprint_eigenlayer::jobs::compute_x_square::CalculateTaskEventHandler;
+use incredible_squaring_blueprint_eigenlayer::jobs::initialize_task::InitializeBlsTaskEventHandler;
+use incredible_squaring_blueprint_eigenlayer::IncredibleSquaringTaskManager;
+use incredible_squaring_blueprint_eigenlayer::api_client::ApiClient;
 
 #[blueprint_sdk::main(env)]
 async fn main() {
@@ -27,7 +27,7 @@ async fn main() {
     let server_address = format!("{}:{}", "127.0.0.1", 8081);
     let api_client = ApiClient::new();
     
-    let parallel_exec_context = ParallelExecContext {
+    let eigen_client_context = EigenSquareContext {
         client: AggregatorClient::new(&server_address)?,
         api_client,
         std_config: env.clone(),
@@ -37,7 +37,7 @@ async fn main() {
             .await
             .unwrap();
 
-    let contract = ParallelExecTaskManager::new(
+    let contract = IncredibleSquaringTaskManager::new(
         *TASK_MANAGER_ADDRESS,
         provider,
     );
@@ -45,7 +45,7 @@ async fn main() {
     let initialize_task =
         InitializeBlsTaskEventHandler::new(contract.clone(), aggregator_context.clone());
 
-    let calculate_task = CalculateTaskEventHandler::new(contract.clone(), parallel_exec_context);
+    let calculate_task = CalculateTaskEventHandler::new(contract.clone(), eigen_client_context);
 
     info!("~~~ Executing the parallel execution blueprint ~~~");
     let eigen_config = EigenlayerBLSConfig::new(Address::default(), Address::default());

@@ -2,6 +2,10 @@
 
 A simple AVS blueprint that fetches block data from an API, hashes the concatenated block hashes, and aggregates BLS signatures before submitting onchain.
 
+## Notes
+*** Important ***
+While the blueprint hasn't been renamed to parallel-exec, the code has been updated to utilize the parallel-exec-helper to form block responses (with batches), hash and submit them to the contract
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -28,7 +32,7 @@ Before you begin, ensure you have the following installed:
 - To build the blueprint, run the following command:
 
 ```bash
-cargo build --release -p parallel-exec-blueprint-eigenlayer
+cargo build --release -p incredible-squaring-blueprint-eigenlayer
 ```
 
 ## Running the AVS on a Testnet
@@ -36,5 +40,5 @@ cargo build --release -p parallel-exec-blueprint-eigenlayer
 - We have a test for running this AVS Blueprint on a local Anvil Testnet. You can run the test with the following:
 
 ```bash
-RUST_LOG=gadget=trace cargo test --package parallel-exec-blueprint-eigenlayer test_eigenlayer_parallel_exec_blueprint -- --nocapture
+RUST_LOG=gadget=trace cargo test --package incredible-squaring-blueprint-eigenlayer test_eigenlayer_incredible_squaring_blueprint -- --nocapture
 ```

@@ -1,5 +1,5 @@
 [package]
-name = "parallel-exec-blueprint-eigenlayer"
+name = "incredible-squaring-blueprint-eigenlayer"
 version = "0.1.1"
 description = "A Blueprint for parallel execution on Eigenlayer"
 authors.workspace = true

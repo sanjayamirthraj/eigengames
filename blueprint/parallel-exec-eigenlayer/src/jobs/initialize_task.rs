@@ -1,7 +1,7 @@
 use crate::IIncredibleSquaringTaskManager::Task;
 use crate::{
-    contexts::aggregator::AggregatorContext, ParallelExecTaskManager, ProcessorError,
-    PARALLEL_EXEC_TASK_MANAGER_ABI_STRING,
+    contexts::aggregator::AggregatorContext, IncredibleSquaringTaskManager, ProcessorError,
+    INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
 };
 use blueprint_sdk::event_listeners::evm::EvmContractEventListener;
 use blueprint_sdk::logging::info;
@@ -15,9 +15,9 @@ const BLOCK_TIME_SECONDS: u32 = 12;
     id = 1,
     params(task, task_index),
     event_listener(
-        listener = EvmContractEventListener<AggregatorContext, ParallelExecTaskManager::NewTaskCreated>,
-        instance = ParallelExecTaskManager,
-        abi = PARALLEL_EXEC_TASK_MANAGER_ABI_STRING,
+        listener = EvmContractEventListener<AggregatorContext, IncredibleSquaringTaskManager::NewTaskCreated>,
+        instance = IncredibleSquaringTaskManager,
+        abi = INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
         pre_processor = convert_event_to_inputs,
     ),
 )]
@@ -58,7 +58,7 @@ pub async fn initialize_bls_task(
 /// and parse the return type by the index.
 pub async fn convert_event_to_inputs(
     event: (
-        ParallelExecTaskManager::NewTaskCreated,
+        IncredibleSquaringTaskManager::NewTaskCreated,
         alloy_rpc_types::Log,
     ),
 ) -> Result<Option<(Task, u32)>, ProcessorError> {
