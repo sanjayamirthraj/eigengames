@@ -33,37 +33,38 @@ const HeroSection = () => {
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
       <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-purple-800/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "1s" }}></div>
       
-      <div className="relative z-10 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-4 text-white">
-          Ethereum Parallel Execution Dashboard
-        </h1>
-        <p className="text-lg text-zinc-300 mb-6 max-w-3xl">
-          Visualize and optimize transaction batches for parallel execution on Ethereum. Increase block efficiency, maximize rewards, 
-          and contribute to scaling the network through parallelization.
-        </p>
-        
-        <div className="flex gap-4 mb-6">
-          <Dialog open={isVisualizationsOpen} onOpenChange={setIsVisualizationsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
-                Open Visualizations
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent">
-              <div className="relative w-full h-full">
-                <DialogClose className="absolute right-2 top-2 z-50 rounded-full bg-zinc-900/80 p-1.5 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2">
-                  <X className="h-5 w-5 text-white" />
-                  <span className="sr-only">Close</span>
-                </DialogClose>
-                <iframe 
-                  src="/visualizations" 
-                  className="w-full h-full border-0 rounded-lg shadow-xl" 
-                  title="Visualizations"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+      <div className="relative z-10 flex justify-between items-center">
+        <div className="max-w-3xl">
+          <h1 className="text-4xl font-bold mb-4 text-white">
+            Ethereum Parallel Execution Dashboard
+          </h1>
+          <p className="text-lg text-zinc-300 mb-6">
+            Visualize and optimize transaction batches for parallel execution on Ethereum. Increase block efficiency, maximize rewards, 
+            and contribute to scaling the network through parallelization.
+          </p>
         </div>
+        
+        <Dialog open={isVisualizationsOpen} onOpenChange={setIsVisualizationsOpen}>
+          <DialogTrigger asChild>
+            <div className="bg-zinc-900 border-2 border-purple-600 rounded-full px-6 py-3 shadow-lg hover:shadow-purple-700/20 transition-all cursor-pointer flex items-center space-x-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-purple-500"></div>
+              <span className="text-white font-medium uppercase tracking-widest text-base">Animated Visualization</span>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent">
+            <div className="relative w-full h-full">
+              <DialogClose className="absolute right-2 top-2 z-50 rounded-full bg-zinc-900/80 p-1.5 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2">
+                <X className="h-5 w-5 text-white" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+              <iframe 
+                src="/visualizations" 
+                className="w-full h-full border-0 rounded-lg shadow-xl" 
+                title="Visualizations"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       
       {/* Parallelization explanation */}

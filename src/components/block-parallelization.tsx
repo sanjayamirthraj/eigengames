@@ -192,7 +192,7 @@ const BlockParallelization = ({
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-black">Block Stream</h2>
         <div className="flex items-center gap-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500" suppressHydrationWarning={true}>
             Last updated: {lastUpdated.toLocaleTimeString()}
           </p>
           <Button 

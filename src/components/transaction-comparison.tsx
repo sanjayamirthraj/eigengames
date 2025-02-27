@@ -184,7 +184,7 @@ const TransactionComparison = () => {
                   <div className="mt-2 flex justify-between text-xs text-zinc-500">
                     <span>{tx.value} ETH</span>
                     <span>{tx.gasUsed} gas</span>
-                    <span>{formatTimestamp(tx.timestamp)}</span>
+                    <span suppressHydrationWarning={true}>{formatTimestamp(tx.timestamp)}</span>
                   </div>
                 </div>
               ))}

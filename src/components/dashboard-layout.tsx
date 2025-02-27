@@ -60,9 +60,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               © 2025 Ethereum Parallel Execution Dashboard Made at Eigen Games
             </div>
             <div className="flex space-x-6">
-              <a href="#" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">Documentation</a>
-              <a href="#" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">GitHub</a>
-              <a href="#" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">Support</a>
+              <a href="https://github.com/sanjayamirthraj/eigengames/blob/main/README.md" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">Documentation</a>
+              <a href="https://github.com/sanjayamirthraj/eigengames" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">GitHub</a>
             </div>
           </div>
         </div>

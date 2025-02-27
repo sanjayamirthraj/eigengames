@@ -334,7 +334,7 @@ const BlockStreamVisualization = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <div className="h-6 w-1 bg-purple-500 rounded-full"></div>
-              <h2 className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Proposed Block Batched </h2>
+              <h2 className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Batched Block Proposer </h2>
             </div>
             <div className="flex items-center space-x-3">
               <div className="px-3 py-1 rounded-full border border-purple-500/50 bg-purple-500/10 backdrop-blur-sm">
@@ -418,7 +418,7 @@ const BlockStreamVisualization = ({
                 </div>
                 <div className="px-2 py-1.5 bg-purple-900/20 rounded-lg border border-purple-800/30">
                   <div className="text-xs font-mono text-purple-300 mb-0.5">Total Transactions</div>
-                  <div className="text-xs font-mono text-white font-medium">
+                  <div className="text-xs font-mono text-white font-medium" suppressHydrationWarning={true}>
                     {blocks.reduce((acc, block) => acc + block.transactions, 0).toLocaleString()}
                   </div>
                   <div className="text-[10px] text-zinc-500 mt-0.5">Combined across all batches</div>

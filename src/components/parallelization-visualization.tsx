@@ -441,7 +441,7 @@ const ParallelizationVisualization = ({
                 <div className="text-xs text-zinc-500 mt-1">Combined transactions across all batches</div>
               </div>
 
-              <div className="text-sm text-zinc-400 border border-zinc-800 bg-black/30 px-3 py-2 rounded-md text-center">
+              <div className="text-sm text-zinc-400 border border-zinc-800 bg-black/30 px-3 py-2 rounded-md text-center" suppressHydrationWarning={true}>
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </div>
             </CardContent>

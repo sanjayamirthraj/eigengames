@@ -18,16 +18,23 @@ export const metadata: Metadata = {
   description: "Visualize and optimize Ethereum transaction parallelization for block proposers",
 };
 
+// Add special comment to suppress React hydration errors
+// @ts-ignore
+// eslint-disable-next-line @next/next/no-sync-scripts
+/* @__SUPPRESS_HYDRATION_WARNING__ */
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning={true}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+        suppressHydrationWarning={true}
       >
+        {/* @__SUPPRESS_HYDRATION_WARNING__ */}
         <HydrationErrorSuppressor>
           {children}
         </HydrationErrorSuppressor>

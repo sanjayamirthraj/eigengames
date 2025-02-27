@@ -137,7 +137,7 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Gas Usage</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium" suppressHydrationWarning={true}>
                         {calculateGasUsage(block.transactions.length).toLocaleString()} gas
                       </span>
                     </div>
@@ -241,7 +241,7 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm text-gray-500">Gas Usage</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium" suppressHydrationWarning={true}>
                         {calculateGasUsage(block.transactions.length).toLocaleString()} gas
                       </span>
                     </div>

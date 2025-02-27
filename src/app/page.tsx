@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <DashboardLayout>
       {/* Hero Section - Moved down */}
-      <div>
+      <div suppressHydrationWarning={true}>
         <HeroSection />
       </div>
       {/* Block Stream Visualization - Moved to top */}

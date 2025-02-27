@@ -957,7 +957,7 @@ const EthereumTransactionBatching = () => {
         // Show transaction count and time in UI
         const currentTime = performance.now();
         const elapsed = ((currentTime - startTime) / 1000).toFixed(1);
-        setExplanation(`Processed ${transactionsProcessed}/${transactions.length} transactions (${elapsed}s elapsed)`);
+        setExplanation(`Processed ${transactionsProcessed}/${transactions.length} transactions `);
         
         // Small pause between transactions
         await new Promise(resolve => setTimeout(resolve, 150));
@@ -1676,10 +1676,6 @@ const EthereumTransactionBatching = () => {
           <li className="flex items-center">
             <div className="w-4 h-4 bg-zinc-400 rounded-full mr-2"></div>
             <span className="text-zinc-300">Blockchain blocks</span>
-          </li>
-          <li className="flex items-center">
-            <div className="flex items-center h-4 bg-gradient-to-r from-green-400 to-purple-500 w-4 rounded-full mr-2"></div>
-            <span className="text-zinc-300">Transaction fee (height = fee size)</span>
           </li>
         </ul>
       </div>
