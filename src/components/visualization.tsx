@@ -1651,33 +1651,12 @@ const EthereumTransactionBatching = () => {
       {displayComparisonStats()}
       
       <div className="p-4 bg-zinc-800 text-sm">
-        <h3 className="font-bold mb-2 text-white">Key Concepts:</h3>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-            <span className="text-zinc-300">Transactions in mempool</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-            <span className="text-zinc-300">State 0 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-            <span className="text-zinc-300">State 2 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-            <span className="text-zinc-300">State 4 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-            <span className="text-zinc-300">State 3 transactions</span>
-          </li>
-          <li className="flex items-center">
-            <div className="w-4 h-4 bg-zinc-400 rounded-full mr-2"></div>
-            <span className="text-zinc-300">Blockchain blocks</span>
-          </li>
-        </ul>
+        <h3 className="font-bold mb-2 text-white">Key Concept:</h3>
+        <p className="text-zinc-300">
+          Our implementation of state access parallelization through AVS revolutionizes transaction processing by analyzing state access patterns and intelligently batching compatible transactions. 
+          Unlike traditional sequential processing where transactions are ordered solely by gas fees, Our AVS groups transactions that access different 
+          state components, enabling parallelizable execution that is faster than traditional sequential processing and validated!
+        </p>
       </div>
     </div>
   );
