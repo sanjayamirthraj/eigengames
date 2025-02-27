@@ -10,8 +10,14 @@ import {
   DialogContent,
   DialogTrigger,
   DialogClose,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+
+// Simple VisuallyHidden component for accessibility
+const VisuallyHidden = ({ children }: { children: React.ReactNode }) => (
+  <span className="sr-only">{children}</span>
+);
 
 const HeroSection = () => {
   const { addNewBlock, startSimulation, stopSimulation, isSimulating } = useBlockStore();
@@ -52,6 +58,9 @@ const HeroSection = () => {
             </div>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent">
+            <VisuallyHidden>
+              <DialogTitle>Ethereum Parallel Execution Visualization</DialogTitle>
+            </VisuallyHidden>
             <div className="relative w-full h-full">
               <DialogClose className="absolute right-2 top-2 z-50 rounded-full bg-zinc-900/80 p-1.5 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2">
                 <X className="h-5 w-5 text-white" />
