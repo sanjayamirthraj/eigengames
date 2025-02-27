@@ -195,39 +195,39 @@ const BlockStreamVisualization = ({
 
   return (
     <Card className="w-full bg-zinc-900 border border-zinc-800 shadow-md rounded-lg overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 px-6">
+      <CardHeader className="flex flex-row items-center justify-between pb-4 px-8">
         <div>
-          <CardTitle className="text-xl text-white">Block Stream</CardTitle>
-          <p className="text-sm text-zinc-400 mt-1">Visualizing the most recent blocks</p>
+          <CardTitle className="text-2xl text-white">Block Stream</CardTitle>
+          <p className="text-base text-zinc-400 mt-2">Visualizing the most recent blocks</p>
         </div>
         
         {/* Real-time update indicator */}
-        <div className="flex items-center space-x-3">
-          <div className="text-xs text-zinc-400">
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-zinc-400">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </div>
           <Badge 
             variant={isSimulating ? "default" : "outline"} 
-            className={`${isSimulating ? 'bg-green-500/20 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400'} px-2 py-1 flex items-center`}
+            className={`${isSimulating ? 'bg-green-500/20 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400'} px-3 py-1.5 flex items-center text-sm`}
           >
             {isSimulating && (
-              <span className="relative flex h-2 w-2 mr-2">
+              <span className="relative flex h-3 w-3 mr-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
               </span>
             )}
             {isSimulating ? 'Live Updates' : 'Paused'}
           </Badge>
           <Button 
-            size="sm" 
+            size="default" 
             variant="outline" 
-            className="text-xs bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+            className="text-sm bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
             onClick={fetchBlocks}
             disabled={loading}
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-3 w-3 animate-spin" /> 
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                 Loading...
               </>
             ) : (
@@ -300,7 +300,7 @@ const BlockStreamVisualization = ({
         </div>
       </CardHeader>
       
-      <CardContent className="p-6">
+      <CardContent className="p-8">
         {error && (
           <div className="rounded-md bg-red-500/10 border border-red-500/20 p-3 mb-4 text-red-400 text-sm">
             <h3 className="font-bold">Error</h3>
@@ -372,13 +372,13 @@ const BlockStreamVisualization = ({
         
         <div 
           ref={scrollContainerRef}
-          className="flex items-stretch gap-4 overflow-x-auto pb-4 hide-scrollbar"
+          className="flex items-stretch gap-8 overflow-x-auto pb-8 pt-2 hide-scrollbar"
           style={{ direction: 'rtl' }} // Display newest blocks on the left by reversing direction
         >
           {loading && blocks.length === 0 ? (
-            <div className="flex items-center justify-center w-full py-12">
-              <Loader2 className="h-8 w-8 text-purple-500 animate-spin mr-2" />
-              <p className="text-zinc-400">Loading blocks...</p>
+            <div className="flex items-center justify-center w-full py-16">
+              <Loader2 className="h-12 w-12 text-purple-500 animate-spin mr-3" />
+              <p className="text-zinc-400 text-lg">Loading blocks...</p>
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -389,7 +389,7 @@ const BlockStreamVisualization = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
-                  className={`flex-shrink-0 w-48 p-4 rounded-lg border cursor-pointer shadow-lg ${
+                  className={`flex-shrink-0 w-96 p-6 rounded-xl border-2 cursor-pointer shadow-xl ${
                     index === 0 
                       ? "bg-purple-900/40 border-purple-600" 
                       : "bg-zinc-800/90 border-zinc-600"
@@ -397,39 +397,41 @@ const BlockStreamVisualization = ({
                   onClick={() => handleBlockClick(block)}
                   style={{ direction: 'ltr' }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-medium ${index === 0 ? "text-purple-200" : "text-white"}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className={`font-semibold text-xl ${index === 0 ? "text-purple-200" : "text-white"}`}>
                       Block {block.id}
                     </h3>
                     {index === 0 && (
-                      <Badge className="bg-purple-600/70 text-purple-100 border-purple-500 text-xs">Latest</Badge>
+                      <Badge className="bg-purple-600/70 text-purple-100 border-purple-500 text-base px-3 py-1">Latest</Badge>
                     )}
                   </div>
                   
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-4 text-lg">
                     {!block.isSequential ? (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-zinc-300">Transactions</span>
                         <span className={index === 0 ? "text-purple-200" : "text-white"}>
-                          <span className="text-blue-200">{getParallelizableTxCount(block)}</span> / {block.transactions}
+                          <span className="text-blue-200 font-semibold">{getParallelizableTxCount(block)}</span>
+                          <span className="mx-1">/</span> 
+                          <span className="font-semibold">{block.transactions}</span>
                         </span>
                       </div>
                     ) : (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-zinc-300">Transactions</span>
-                        <span className={index === 0 ? "text-purple-200" : "text-white"}>{block.transactions}</span>
+                        <span className={`${index === 0 ? "text-purple-200" : "text-white"} font-semibold`}>{block.transactions}</span>
                       </div>
                     )}
                     
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center py-1">
                       <span className="text-zinc-300">Approximated Total Fees</span>
-                      <span className={index === 0 ? "text-purple-200" : "text-white"}>{block.totalFees} ETH</span>
+                      <span className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{block.totalFees} ETH</span>
                     </div>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between py-1">
                       <span className="text-zinc-300">Type</span>
                       <Badge className={`
-                        text-xs px-1.5 py-0.5 
+                        text-base px-3 py-1 
                         ${block.isSequential 
                           ? "bg-orange-500/30 text-orange-100 border-orange-400" 
                           : "bg-blue-500/30 text-blue-100 border-blue-400"}
@@ -439,9 +441,9 @@ const BlockStreamVisualization = ({
                     </div>
                     
                     {!block.isSequential && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center py-1">
                         <span className="text-zinc-300">Parallel Ratio</span>
-                        <span className={index === 0 ? "text-purple-200" : "text-white"}>
+                        <span className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>
                           {Math.round((getParallelizableTxCount(block) / block.transactions) * 100)}%
                         </span>
                       </div>
@@ -454,11 +456,11 @@ const BlockStreamVisualization = ({
         </div>
         
         {/* Actions row */}
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-8">
           <Button
-            size="sm"
+            size="lg"
             variant="outline"
-            className="text-sm bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+            className="text-base bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 px-6"
             onClick={fetchBlocks}
             disabled={loading}
           >
@@ -466,9 +468,9 @@ const BlockStreamVisualization = ({
           </Button>
           
           <Button
-            size="sm"
+            size="lg"
             variant={isSimulating ? "destructive" : "default"}
-            className={`text-sm ${isSimulating ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"}`}
+            className={`text-base px-6 ${isSimulating ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"}`}
             onClick={handleSimulationToggle}
           >
             {isSimulating ? 'Stop Auto Updates' : 'Start Auto Updates'}
