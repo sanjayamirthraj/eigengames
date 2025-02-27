@@ -1740,13 +1740,6 @@ const EthereumTransactionBatching: React.FC<EthereumTransactionBatchingProps> = 
         <p className="text-zinc-400 mt-2">
           Comparison of traditional fee-based sequential processing vs. EigenLayer AVS state-based batching for optimized throughput.
         </p>
-        {serverData?.currentBlock && (
-          <div className="mt-2 text-sm text-zinc-500">
-            Block #{serverData.currentBlock.id} • 
-            {serverData.currentBlock.transactions.parallel.length + 
-              serverData.currentBlock.transactions.sequential.length} transactions
-          </div>
-        )}
       </div>
       
       <div className="flex items-center justify-between p-4 bg-zinc-800">
