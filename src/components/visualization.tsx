@@ -1765,7 +1765,7 @@ const EthereumTransactionBatching: React.FC<EthereumTransactionBatchingProps> = 
       <div className="flex flex-col w-full" style={{ background: '#09090b' }}>
         <div className="w-full h-[275px] relative border-b border-zinc-800">
           <div className="absolute top-2 left-2 bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full text-sm font-medium z-10">
-            Batch Processing
+          Parallelized Processing
           </div>
           <div ref={batchMountRef} className="w-full h-full" />
         </div>
