@@ -8,6 +8,7 @@ This parallel execution batching AVS reads transactions from Ethereum's mempool 
 
 The operator (and this AVS) utilizes a script that is used to fetch mempool transaction state accesses, and group transactions together that do not have state access collisions. Find the local server that needs to be run in the root of this repo. (/parallel-exec-helper)
 
+The parallel exec helper computation server has been deployed to (https://parallel-exec-helper.onrender.com)[https://parallel-exec-helper.onrender.com]
 
 ## Prerequisites
 
