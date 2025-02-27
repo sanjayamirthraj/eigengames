@@ -525,7 +525,7 @@ const BlockStreamVisualization = ({
                                 }
                               }}
                               className={`relative rounded-lg border-2 p-3 backdrop-blur-sm cursor-pointer transform transition-all duration-200 hover:scale-[1.02] ${backgroundClass} ${borderClass} ${
-                                index === 0 
+                                index > -1 
                                   ? "shadow-[0_0_20px_-12px_rgba(168,85,247,0.5)]" 
                                   : "hover:border-purple-600/50"
                               } ${flashClass}`}
@@ -554,8 +554,6 @@ const BlockStreamVisualization = ({
                                     <span className="text-zinc-300 text-xs">Transactions</span>
                                     <span className={index === 0 ? "text-purple-200 text-xs" : "text-white text-xs"}>
                                       <span className="text-blue-200 font-semibold">{getParallelizableTxCount(block)}</span>
-                                      <span className="mx-1">/</span> 
-                                      <span className="font-semibold">{block.transactions}</span>
                                     </span>
                                   </div>
                                 ) : (
