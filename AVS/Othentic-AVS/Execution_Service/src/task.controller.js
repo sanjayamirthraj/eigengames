@@ -1,5 +1,7 @@
 "use strict";
 const { Router } = require("express")
+const axios = require("axios");
+const cron = require("node-cron");
 const CustomError = require("./utils/validateError");
 const CustomResponse = require("./utils/validateResponse");
 const parallelBlockService = require("./parallelBlock.service");
@@ -32,5 +34,22 @@ router.post("/execute", async (req, res) => {
         return res.status(500).send(new CustomError("Something went wrong", {}));
     }
 })
+
+// Cron Job to execute the task every 5 seconds
+setTimeout(() => {
+    console.log("Starting cron job...");
+    cron.schedule("*/5 * * * * *", async () => {
+        console.log("Executing scheduled task...");
+        try {
+            const response = await axios.post("http://localhost:4003/task/execute", { taskDefinitionId: 0 }); // Adjust the port if needed
+            console.log("Task executed:", response.data);
+        } catch (error) {
+            console.error("Error executing task:", error.message);
+        }
+    });
+console.log("Cron job started...");
+}, 5000);
+
+console.log("Cron job started...");
 
 module.exports = router
