@@ -32,6 +32,8 @@ const BlockStreamVisualization = ({
   onBlockSelect 
 }: BlockStreamProps) => {
   const [blocks, setBlocks] = useState<BlockBatch[]>([]);
+  const [previousBlocks, setPreviousBlocks] = useState<{[key: string]: number}>({});
+  const [flashingBlocks, setFlashingBlocks] = useState<{[key: string]: boolean}>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -101,13 +103,27 @@ const BlockStreamVisualization = ({
         return a.groupId - b.groupId;
       });
       
+      // Save previous transaction counts before updating
+      const newPreviousBlocks: {[key: string]: number} = {};
+      const newFlashingBlocks: {[key: string]: boolean} = {};
+      
       // Map to our format
       const formattedBlocks: BlockBatch[] = sortedBlocks.map(block => {
         const isSequential = block.type === 'sequential';
         const txCount = block.transactions.length;
+        const blockId = `#${block.groupId}`;
+        
+        // Check if this block existed before and if the transaction count changed
+        if (previousBlocks[blockId] !== undefined && previousBlocks[blockId] !== txCount) {
+          console.log(`Transaction count changed for block ${blockId}: ${previousBlocks[blockId]} → ${txCount}`);
+          newFlashingBlocks[blockId] = true;
+        }
+        
+        // Store the current transaction count for next comparison
+        newPreviousBlocks[blockId] = txCount;
 
         return {
-          id: `#${block.groupId}`,
+          id: blockId,
           transactions: txCount,
           totalFees: (txCount * 0.003).toFixed(3), // Calculate fees based on tx count and type
           expectedMEV: (Math.random() * 0.3 + 0.05).toFixed(3),
@@ -117,7 +133,14 @@ const BlockStreamVisualization = ({
         };
       });
       
+      // Log if any blocks will flash
+      if (Object.keys(newFlashingBlocks).length > 0) {
+        console.log("Blocks that will flash:", newFlashingBlocks);
+      }
+      
       setBlocks(formattedBlocks);
+      setPreviousBlocks(newPreviousBlocks);
+      setFlashingBlocks(newFlashingBlocks);
       setLastUpdated(new Date());
       // Generate new hash for visual block effect
       setBlockHash((() => {
@@ -126,6 +149,15 @@ const BlockStreamVisualization = ({
       // Update other blockchain metadata
       setBlockNonce(Math.floor(Math.random() * 1000000));
       setBlockHeight(prev => prev + 1);
+      
+      // Reset flashing blocks after animation duration
+      if (Object.keys(newFlashingBlocks).length > 0) {
+        setTimeout(() => {
+          console.log("Resetting flashing blocks state");
+          setFlashingBlocks({});
+        }, 2000); // 2 seconds duration for flash animation
+      }
+      
     } catch (err) {
       console.error("Error fetching blocks:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -187,6 +219,62 @@ const BlockStreamVisualization = ({
     return block.transactions - (block.sequentialCount || 0);
   };
 
+  // Calculate color based on transaction percentage - moved outside render for reusability
+  const getColorStyles = (block: BlockBatch, index: number) => {
+    // Always recalculate the total transactions from the current blocks
+    const totalTxs = blocks.reduce((acc, curr) => acc + curr.transactions, 0);
+    // Calculate percentage of this block's transactions
+    const txPercentage = totalTxs > 0 ? Math.round((block.transactions / totalTxs) * 100) : 0;
+    
+    // Background color logic
+    const getBackgroundColor = (percent: number, isSequential: boolean) => {
+      if (index === 0) return isSequential ? "bg-orange-900/60" : "bg-purple-900/60"; // Latest block
+      
+      // For sequential blocks - use orange palette
+      if (isSequential) {
+        if (percent >= 40) return "bg-orange-800/50"; 
+        if (percent >= 30) return "bg-orange-700/45";
+        if (percent >= 20) return "bg-orange-600/40";
+        if (percent >= 10) return "bg-orange-500/35";
+        return "bg-orange-400/30";
+      }
+      
+      // For parallel blocks - use purple palette
+      if (percent >= 40) return "bg-purple-800/50"; 
+      if (percent >= 30) return "bg-purple-700/45";
+      if (percent >= 20) return "bg-purple-600/40";
+      if (percent >= 10) return "bg-purple-500/35";
+      return "bg-purple-400/30";
+    };
+    
+    // Border color logic
+    const getBorderColor = (percent: number, isSequential: boolean) => {
+      if (index === 0) return isSequential ? "border-orange-600" : "border-purple-600"; // Latest block
+      
+      // For sequential blocks - use orange palette
+      if (isSequential) {
+        if (percent >= 40) return "border-orange-600";
+        if (percent >= 30) return "border-orange-500"; 
+        if (percent >= 20) return "border-orange-400";
+        if (percent >= 10) return "border-orange-300";
+        return "border-orange-200";
+      }
+      
+      // For parallel blocks - use purple palette
+      if (percent >= 40) return "border-purple-600";
+      if (percent >= 30) return "border-purple-500"; 
+      if (percent >= 20) return "border-purple-400";
+      if (percent >= 10) return "border-purple-300";
+      return "border-purple-200";
+    };
+    
+    return {
+      backgroundClass: getBackgroundColor(txPercentage, block.isSequential),
+      borderClass: getBorderColor(txPercentage, block.isSequential),
+      isFlashing: flashingBlocks[block.id] === true
+    };
+  };
+
   const handleSimulationToggle = () => {
     if (isSimulating) {
       // Stop simulation
@@ -203,6 +291,20 @@ const BlockStreamVisualization = ({
       setSimulationInterval(interval);
       setIsSimulating(true);
     }
+  };
+
+  // For debugging, add a function to manually trigger a flash on all blocks
+  const triggerTestFlash = () => {
+    const testFlashingBlocks: {[key: string]: boolean} = {};
+    blocks.forEach(block => {
+      testFlashingBlocks[block.id] = true;
+    });
+    setFlashingBlocks(testFlashingBlocks);
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      setFlashingBlocks({});
+    }, 2000);
   };
 
   return (
@@ -289,7 +391,25 @@ const BlockStreamVisualization = ({
                   <div className="text-xs font-mono text-purple-300 mb-0.5">Public Good Reward</div>
                   <div className="text-xs font-mono text-white font-medium flex items-center">
                     <span className="text-emerald-400 mr-1">+</span>
-                    {blocks.reduce((acc, block) => acc + parseFloat(block.expectedMEV), 0).toFixed(3)} ETH
+                    {(() => {
+                      // Calculate total transactions
+                      const totalTransactions = blocks.reduce((acc, block) => acc + block.transactions, 0);
+                      
+                      // Calculate parallelizable transactions (non-sequential)
+                      const parallelizableTxCount = blocks.reduce((acc, block) => 
+                        acc + (block.isSequential ? 0 : block.transactions - (block.sequentialCount || 0)), 0);
+                      
+                      // Calculate total transaction fees
+                      const totalTransactionFees = blocks.reduce((acc, block) => 
+                        acc + parseFloat(block.totalFees), 0);
+                      
+                      // Calculate public good reward using the formula
+                      const publicGoodReward = totalTransactions > 0 
+                        ? ((parallelizableTxCount / totalTransactions) * (totalTransactionFees / 10)).toFixed(3)
+                        : "0.000";
+                        
+                      return `${publicGoodReward} ETH`;
+                    })()}
                   </div>
                   <div className="text-[10px] text-zinc-500 mt-0.5">Rewards block proposers</div>
                 </div>
@@ -378,70 +498,42 @@ const BlockStreamVisualization = ({
                     ) : (
                       <AnimatePresence mode="popLayout">
                         {blocks.map((block, index) => {
-                          // Calculate the percentage of total transactions this block represents
-                          const totalTxs = blocks.reduce((acc, curr) => acc + curr.transactions, 0);
-                          const txPercentage = Math.round((block.transactions / totalTxs) * 100);
+                          // Get styles based on current transaction data
+                          const { backgroundClass, borderClass, isFlashing } = getColorStyles(block, index);
                           
-                          // Generate a color based on transaction percentage
-                          // Higher percentages get deeper color, lower get lighter
-                          const getBackgroundColor = (percent: number, isSequential: boolean) => {
-                            if (index === 0) return isSequential ? "bg-orange-900/60" : "bg-purple-900/60"; // Latest block
-                            
-                            // For sequential blocks - use orange palette
-                            if (isSequential) {
-                              if (percent >= 40) return "bg-orange-800/50"; 
-                              if (percent >= 30) return "bg-orange-700/45";
-                              if (percent >= 20) return "bg-orange-600/40";
-                              if (percent >= 10) return "bg-orange-500/35";
-                              return "bg-orange-400/30";
-                            }
-                            
-                            // For parallel blocks - use purple palette
-                            if (percent >= 40) return "bg-purple-800/50"; 
-                            if (percent >= 30) return "bg-purple-700/45";
-                            if (percent >= 20) return "bg-purple-600/40";
-                            if (percent >= 10) return "bg-purple-500/35";
-                            return "bg-purple-400/30";
-                          };
-                          
-                          // Generate a border color that matches the background intensity
-                          const getBorderColor = (percent: number, isSequential: boolean) => {
-                            if (index === 0) return isSequential ? "border-orange-600" : "border-purple-600"; // Latest block
-                            
-                            // For sequential blocks - use orange palette
-                            if (isSequential) {
-                              if (percent >= 40) return "border-orange-600";
-                              if (percent >= 30) return "border-orange-500"; 
-                              if (percent >= 20) return "border-orange-400";
-                              if (percent >= 10) return "border-orange-300";
-                              return "border-orange-200";
-                            }
-                            
-                            // For parallel blocks - use purple palette
-                            if (percent >= 40) return "border-purple-600";
-                            if (percent >= 30) return "border-purple-500"; 
-                            if (percent >= 20) return "border-purple-400";
-                            if (percent >= 10) return "border-purple-300";
-                            return "border-purple-200";
-                          };
-                          
-                          const backgroundClass = getBackgroundColor(txPercentage, block.isSequential);
-                          const borderClass = getBorderColor(txPercentage, block.isSequential);
+                          // Create a custom class for dramatic flashing effect
+                          const flashClass = isFlashing 
+                            ? "ring-4 ring-white shadow-[0_0_40px_rgba(255,255,255,0.7)]" 
+                            : "";
                           
                           return (
                             <motion.div
                               key={block.id}
                               initial={{ opacity: 0, y: 16 }}
-                              animate={{ opacity: 1, y: 0 }}
+                              animate={{ 
+                                opacity: 1, 
+                                y: 0,
+                                scale: isFlashing ? [1, 1.1, 1] : 1,
+                              }}
                               exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.3 }}
+                              transition={{ 
+                                duration: 0.3,
+                                scale: {
+                                  duration: 0.7,
+                                  repeat: isFlashing ? 2 : 0,
+                                  ease: "easeInOut"
+                                }
+                              }}
                               className={`relative rounded-lg border-2 p-3 backdrop-blur-sm cursor-pointer transform transition-all duration-200 hover:scale-[1.02] ${backgroundClass} ${borderClass} ${
                                 index === 0 
                                   ? "shadow-[0_0_20px_-12px_rgba(168,85,247,0.5)]" 
                                   : "hover:border-purple-600/50"
-                              }`}
+                              } ${flashClass}`}
                               onClick={() => handleBlockClick(block)}
                             >
+                              {isFlashing && (
+                                <div className="absolute inset-0 rounded-lg animate-pulse-fast bg-white opacity-20 pointer-events-none" />
+                              )}
                               {/* Top connector */}
                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-px h-2 bg-purple-500/50"></div>
                               
@@ -450,11 +542,8 @@ const BlockStreamVisualization = ({
                                   Batch {block.id}
                                 </h3>
                                 <div className="flex space-x-1">
-                                  {index === 0 && (
-                                    <Badge className="bg-purple-600/70 text-purple-100 border-purple-500 text-xs px-2 py-0.5">Latest</Badge>
-                                  )}
                                   <Badge className="bg-purple-700/50 text-purple-100 border-purple-500/30 text-[10px] px-1.5 py-0.5">
-                                    {txPercentage}% Total
+                                    {block.transactions} Transactions
                                   </Badge>
                                 </div>
                               </div>
@@ -536,48 +625,6 @@ const BlockStreamVisualization = ({
               </div>
               
               {/* Actions row with enhanced styling - SMALLER BUTTONS */}
-              <div className="flex justify-between mt-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-sm bg-zinc-800/80 border-zinc-700/80 text-zinc-300 hover:bg-zinc-700 px-3 backdrop-blur-sm"
-                  onClick={fetchBlocks}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> 
-                      Loading...
-                    </>
-                  ) : (
-                    'Fetch Latest Blocks'
-                  )}
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-zinc-400 border border-zinc-800 bg-black/30 px-2 py-1 rounded-md">
-                    Last updated: {lastUpdated.toLocaleTimeString()}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={isSimulating ? "destructive" : "default"}
-                    className={`text-sm px-3 backdrop-blur-sm ${isSimulating ? "bg-red-600/90 hover:bg-red-700" : "bg-purple-600/90 hover:bg-purple-700"}`}
-                    onClick={handleSimulationToggle}
-                  >
-                    {isSimulating ? (
-                      <div className="flex items-center">
-                        <div className="mr-1.5 relative">
-                          <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-ping absolute"></div>
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full relative"></div>
-                        </div>
-                        Stop Auto Updates
-                      </div>
-                    ) : (
-                      'Start Auto Updates'
-                    )}
-                  </Button>
-                </div>
-              </div>
             </CardContent>
             
             {/* Bottom border decoration */}
@@ -616,5 +663,14 @@ export default BlockStreamVisualization;
 
 .animate-shimmer {
   animation: shimmer 3s infinite;
+}
+
+@keyframes pulse-fast {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 0.5s ease-in-out infinite;
 }
 */ 
