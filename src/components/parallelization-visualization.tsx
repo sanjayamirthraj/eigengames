@@ -76,7 +76,7 @@ const ParallelizationVisualization = ({
   // Function to format a transaction hash for display
   const formatTxHash = (hash: string): string => {
     if (!hash || hash.length < 12) return hash;
-    return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
+    return hash;
   };
 
   // Function to fetch blocks from the API
@@ -249,17 +249,20 @@ const ParallelizationVisualization = ({
       <div className="grid grid-cols-4 gap-6">
         {/* Transaction Batches Section - 3/4 width */}
         <div className="col-span-3">
-          <Card className="glass-card overflow-hidden h-full">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500">
+          <Card className="glass-card overflow-hidden h-full border-0 shadow-[0_0_50px_-12px_rgba(168,85,247,0.25)] bg-gradient-to-br from-black to-zinc-900/95">
+            <CardHeader className="relative z-10 border-b border-purple-800/60 bg-black/40 px-6 py-4">
               <div className="flex justify-between items-center">
-                <Badge className="inline-flex items-center w-auto px-2.5 py-1 text-sm font-semibold bg-white/90 text-indigo-800 hover:bg-white/95 border-none">Transaction Batches & Transactions</Badge>
-                {loading && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+                <h1 className="text-2xl font-bold text-white flex items-center">
+                  <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">Transaction Batches</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 ml-3 animate-pulse"></div>
+                </h1>
+                {loading && <Loader2 className="h-4 w-4 animate-spin text-purple-500" />}
               </div>
             </CardHeader>
             <CardContent className="pt-6">
               {loading && batches.length === 0 ? (
                 <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin mr-2" />
+                  <Loader2 className="h-8 w-8 text-purple-500 animate-spin mr-2" />
                   <p className="text-muted-foreground">Loading transaction batches...</p>
                 </div>
               ) : (
@@ -268,30 +271,32 @@ const ParallelizationVisualization = ({
                     batches.map((batch, index) => (
                       <div
                         key={batch.id}
-                        className={`p-4 rounded-xl transition-all ${
-                          selectedBatchIndex === index
-                            ? "glass-panel shadow-md"
-                            : "glass-card hover:shadow-sm"
+                        className={`relative rounded-xl border-2 p-6 backdrop-blur-sm cursor-pointer transform transition-all duration-200 hover:scale-[1.02] ${
+                          index < -1
+                            ? "bg-purple-900/40 border-purple-600 shadow-[0_0_30px_-12px_rgba(168,85,247,0.5)]" 
+                            : "bg-zinc-800/90 border-zinc-600 hover:border-purple-600/50"
                         }`}
                         tabIndex={0}
                         aria-label={`Batch ${batch.id}`}
                       >
                         <div className="flex flex-col space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Batch {batch.id}</span>
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className={`font-semibold text-xl ${index === 0 ? "text-purple-200" : "text-white"}`}>
+                              Batch {batch.id}
+                            </h3>
                             <div className="flex items-center space-x-2">
                               {batch.isSequential ? (
-                                <span className="text-xs bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 px-3 py-1 rounded-full">
+                                <Badge className="bg-orange-500/30 text-orange-100 border-orange-400 px-3 py-1">
                                   Sequential
-                                </span>
+                                </Badge>
                               ) : (
-                                <span className="text-xs bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 px-3 py-1 rounded-full">
+                                <Badge className="bg-blue-500/30 text-blue-100 border-blue-400 px-3 py-1">
                                   Parallelizable
-                                </span>
+                                </Badge>
                               )}
                               <button
                                 onClick={(e) => toggleBatchTransactions(batch.id, e)}
-                                className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+                                className="rounded-full p-1 hover:bg-zinc-700 transition-colors"
                                 aria-label={`${expandedBatches[batch.id] ? 'Collapse' : 'Expand'} transactions`}
                               >
                                 <svg 
@@ -313,39 +318,35 @@ const ParallelizationVisualization = ({
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <p className="text-xs text-muted-foreground">
-                                Transactions
-                              </p>
-                              <p className="font-medium">{batch.transactions}</p>
+                              <span className="text-zinc-300">Transactions</span>
+                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.transactions}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground">Approximated Total Fees</p>
-                              <p className="font-medium">{batch.totalFees} ETH</p>
+                              <span className="text-zinc-300">Total Fees</span>
+                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.totalFees} ETH</p>
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground">
-                                Expected MEV
-                              </p>
-                              <p className="font-medium">{batch.expectedMEV} ETH</p>
+                              <span className="text-zinc-300">Expected MEV</span>
+                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.expectedMEV} ETH</p>
                             </div>
                           </div>
                           
                           {/* Collapsible transaction list for this batch */}
                           {expandedBatches[batch.id] && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <div className="text-sm font-medium mb-2">Transactions in this batch:</div>
+                            <div className="mt-3 pt-3 border-t border-purple-800/30">
+                              <div className="text-sm font-medium mb-2 text-purple-300">Transactions in this batch:</div>
                               <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {batch.txHashes.map((txHash, i) => (
-                                  <div key={i} className="flex justify-between items-center p-2 glass-card rounded-md">
+                                  <div key={i} className="flex justify-between items-center p-2 bg-black/40 border border-purple-800/20 rounded-md">
                                     <div className="flex items-center">
-                                      <div className={`w-2 h-2 rounded-full ${batch.isSequential ? 'bg-amber-500' : 'bg-emerald-500'} mr-2`}></div>
-                                      <span>Tx #{i+1}</span>
+                                      <div className={`w-2 h-2 rounded-full ${batch.isSequential ? 'bg-orange-500' : 'bg-blue-500'} mr-2`}></div>
+                                      <span className="text-zinc-300">Tx #{i+1}</span>
                                     </div>
-                                    <span className="text-xs text-black font-mono bg-gray-100 px-2 py-0.5 rounded">{formatTxHash(txHash)}</span>
+                                    <span className="text-xs font-mono bg-zinc-800/80 text-zinc-300 px-2 py-0.5 rounded">{formatTxHash(txHash)}</span>
                                   </div>
                                 ))}
                                 {batch.transactions === 0 && (
-                                  <div className="text-center text-muted-foreground text-xs py-1">
+                                  <div className="text-center text-zinc-500 text-xs py-1">
                                     No transactions in this batch
                                   </div>
                                 )}
@@ -356,7 +357,7 @@ const ParallelizationVisualization = ({
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-zinc-500">
                       No transaction batches available
                     </div>
                   )}
@@ -368,55 +369,40 @@ const ParallelizationVisualization = ({
 
         {/* Metrics Panel - 1/4 width */}
         <div className="col-span-1">
-          <Card className="glass-card overflow-hidden h-full">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-blue-500">
-              <Badge className="inline-flex items-center w-auto px-2.5 py-1 text-sm font-semibold bg-white/90 text-indigo-800 hover:bg-white/95 border-none">Metrics</Badge>
+          <Card className="glass-card overflow-hidden h-full border-0 shadow-[0_0_50px_-12px_rgba(168,85,247,0.25)] bg-gradient-to-br from-black to-zinc-900/95">
+            <CardHeader className="relative z-10 border-b border-purple-800/60 bg-black/40 px-6 py-4">
+              <h1 className="text-2xl font-bold text-white flex items-center">
+                <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">Metrics</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 ml-3 animate-pulse"></div>
+              </h1>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="glass-panel p-4 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                  </svg>
-                  <p className="text-sm font-medium text-indigo-600">Public Good Reward</p>
+              <div className="px-3 py-2 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                <div className="text-xs font-mono text-purple-300 mb-1">Public Good Reward</div>
+                <div className="text-sm font-mono text-white font-medium flex items-center">
+                  <span className="text-emerald-400 mr-1">+</span>
+                  {calculatedPublicGoodReward} ETH
                 </div>
-                <p className="text-xl font-bold">{calculatedPublicGoodReward} ETH</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Rewards block proposers for including suggested blocks
-                </p>
+                <div className="text-xs text-zinc-500 mt-1">Rewards block proposers for including suggested blocks</div>
               </div>
 
-              <div className="glass-panel p-4 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                  </svg>
-                  <p className="text-sm font-medium text-purple-600">Total Transaction Fees</p>
+              <div className="px-3 py-2 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                <div className="text-xs font-mono text-purple-300 mb-1">Total Transaction Fees</div>
+                <div className="text-sm font-mono text-white font-medium">
+                  {totalTransactionFees} ETH
                 </div>
-                <p className="text-xl font-bold">{totalTransactionFees} ETH</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Combined fees across all batches
-                </p>
+                <div className="text-xs text-zinc-500 mt-1">Combined fees across all batches</div>
               </div>
 
-              <div className="glass-panel p-4 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
-                    <path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.93a2 2 0 0 0 1.94 0L21 12.51a2.12 2.12 0 0 0-.09-3.67Z"></path>
-                    <path d="m3.09 8.84 12.35-6.61a1.93 1.93 0 0 1 1.81 0l3.65 1.9a2.12 2.12 0 0 1 .1 3.69L8.73 14.75a2 2 0 0 1-1.94 0L3 12.51a2.12 2.12 0 0 1 .09-3.67Z"></path>
-                    <line x1="12" y1="22" x2="12" y2="13"></line>
-                    <path d="M20 13.5v3.37a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13.5"></path>
-                  </svg>
-                  <p className="text-sm font-medium text-blue-600">Total Transactions</p>
+              <div className="px-3 py-2 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                <div className="text-xs font-mono text-purple-300 mb-1">Total Transactions</div>
+                <div className="text-sm font-mono text-white font-medium">
+                  {totalTransactions}
                 </div>
-                <p className="text-xl font-bold">{totalTransactions}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Combined transactions across all batches
-                </p>
+                <div className="text-xs text-zinc-500 mt-1">Combined transactions across all batches</div>
               </div>
 
-              <div className="pt-4 text-center text-xs text-muted-foreground">
+              <div className="text-sm text-zinc-400 border border-zinc-800 bg-black/30 px-3 py-2 rounded-md text-center">
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </div>
             </CardContent>
@@ -426,53 +412,47 @@ const ParallelizationVisualization = ({
 
       <div className="flex justify-between">
         <Button 
-          className={`${isAutoRefreshing ? 
-            "bg-green-600 hover:bg-green-700" : 
-            "bg-blue-600 hover:bg-blue-700"} text-white`}
+          className={`text-base backdrop-blur-sm ${isAutoRefreshing ? 
+            "bg-red-600/90 hover:bg-red-700" : 
+            "bg-purple-600/90 hover:bg-purple-700"} text-white`}
           onClick={handleAutoRefreshToggle}
           aria-label={isAutoRefreshing ? "Stop auto-refresh" : "Start auto-refresh"}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-            {isAutoRefreshing ? (
-              <>
-                <path d="M21 12a9 9 0 0 1-9 9"></path>
-                <path d="M12 21a9 9 0 0 1-9-9"></path>
-                <path d="M3 12a9 9 0 0 1 9-9"></path>
-                <path d="M12 3a9 9 0 0 1 9 9"></path>
-              </>
-            ) : (
-              <>
-                <path d="M21 2v6h-6"></path>
-                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                <path d="M3 22v-6h6"></path>
-                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-              </>
-            )}
-          </svg>
-          {isAutoRefreshing ? 'Auto-Refreshing' : 'Start Auto-Refresh'}
-        </Button>
-        
-        <Button 
-          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-          aria-label="Refresh data"
-          onClick={fetchBlocks}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Loading...
-            </>
+          {isAutoRefreshing ? (
+            <div className="flex items-center">
+              <div className="mr-2 relative">
+                <div className="w-2 h-2 bg-red-400 rounded-full animate-ping absolute"></div>
+                <div className="w-2 h-2 bg-red-500 rounded-full relative"></div>
+              </div>
+              Stop Auto Updates
+            </div>
           ) : (
-            <>
+            <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                 <path d="M21 2v6h-6"></path>
                 <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
                 <path d="M3 22v-6h6"></path>
                 <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
               </svg>
-              Refresh
+              Start Auto Updates
+            </div>
+          )}
+        </Button>
+        
+        <Button
+          size="lg"
+          variant="outline"
+          className="text-base bg-zinc-800/80 border-zinc-700/80 text-zinc-300 hover:bg-zinc-700 px-6 backdrop-blur-sm"
+          onClick={fetchBlocks}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              Loading...
             </>
+          ) : (
+            'Fetch Latest Batches'
           )}
         </Button>
       </div>

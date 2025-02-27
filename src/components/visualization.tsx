@@ -1600,9 +1600,6 @@ const EthereumTransactionBatching = () => {
             EigenLayer AVS batching is {efficiency}% faster!
           </span>
         </div>
-        <div className="mt-2 text-xs text-zinc-400 text-center">
-          EigenLayer's Actively Validated Services (AVS) provide distributed compute resources that make transaction batching significantly faster.
-        </div>
       </div>
     );
   };

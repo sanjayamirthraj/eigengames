@@ -80,6 +80,15 @@
     @apply bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent;
   }
 
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -153,6 +162,28 @@
   100% {
     background-position: 0% 50%;
   }
+}
+
+@keyframes marquee-slow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-slow {
+  animation: marquee-slow 20s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 4s ease-in-out infinite;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BlockBatch } from "@/types/block";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence, transform } from "framer-motion";
+import { Loader2, Database, Link2 } from "lucide-react";
 
+// Generate hash-like string for visual effect
 
 interface BlockStreamProps {
   autoScroll?: boolean;
@@ -39,6 +40,11 @@ const BlockStreamVisualization = ({
   const [selectedBlock, setSelectedBlock] = useState<BlockBatch | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [blockHash, setBlockHash] = useState<string>((() => {
+      return `Sanjay Amirthraj and Souradeep Das`;
+    })());
+  const [blockNonce, setBlockNonce] = useState<number>(Math.floor(Math.random() * 1000000));
+  const [blockHeight, setBlockHeight] = useState<number>(Math.floor(Math.random() * 10000) + 20000000);
 
   // Function to fetch blocks directly from the API
   const fetchBlocks = async () => {
@@ -111,9 +117,15 @@ const BlockStreamVisualization = ({
         };
       });
       
-      console.log("Organized blocks:", formattedBlocks);
       setBlocks(formattedBlocks);
       setLastUpdated(new Date());
+      // Generate new hash for visual block effect
+      setBlockHash((() => {
+          return `Sanjay Amirthraj and Souradeep Das`;
+        })());
+      // Update other blockchain metadata
+      setBlockNonce(Math.floor(Math.random() * 1000000));
+      setBlockHeight(prev => prev + 1);
     } catch (err) {
       console.error("Error fetching blocks:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -194,291 +206,415 @@ const BlockStreamVisualization = ({
   };
 
   return (
-    <Card className="w-full bg-zinc-900 border border-zinc-800 shadow-md rounded-lg overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-4 px-8">
-        <div>
-          <CardTitle className="text-2xl text-white">Block Stream</CardTitle>
-          <p className="text-base text-zinc-400 mt-2">Visualizing the most recent blocks</p>
-        </div>
+    // Outer compartment wrapper with background effect - MAKING WIDER
+    <div className="relative py-8 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 mx-auto max-w-screen-2xl">
+      {/* Background effect for compartmentalization */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Removing the first background layer (dark zinc) but keeping second layer */}
+        {/* Radial gradient decoration */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-zinc-950 to-zinc-950"></div>
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIGZpbGwtb3BhY2l0eT0iMC4wNDUiPjxwYXRoIGQ9Ik0zNiAxOGMxLjIyOCAwIDIuNDM4LjMgMy41MzIuODkxYTE3LjA1IDE3LjA1IDAgMCAxIDIuOTMyIDEuNjQ1Yy44OS42MzUgMS43NDQgMS4zNiAyLjU2MSAyLjE3N2E5OS4xODMgOTkuMTgzIDAgMCAxIDIuMTc4IDIuNTZjLjYzNS44OS0uODkxIDIuOTE4LTEuNjQ1IDIuOTMyQTguMDk1IDguMDk1IDAgMCAwIDQyIDM2YTggOCAwIDEgMC0xNiAwIDguMDk1IDguMDk1IDAgMCAwIDMuNTU5IDYuNjg4Yy43NTQuMDE0IDIuMzE2LTEuNiAyLjk1MS0yLjQ5YTk5LjMwNCA5OS4zMDQgMCAwIDEgMi4xNzgtMi41NjEgMjAuNzkzIDIwLjc5MyAwIDAgMSAyLjU2LTIuMTc3IDE3LjA1IDE3LjA1IDAgMCAxIDIuOTMzLTEuNjQ1QTcuOTQgNy45NCAwIDAgMSAzNiAxOHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-10"></div>
         
-        {/* Real-time update indicator */}
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-zinc-400">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </div>
-          <Badge 
-            variant={isSimulating ? "default" : "outline"} 
-            className={`${isSimulating ? 'bg-green-500/20 text-green-400 hover:bg-green-500/20' : 'bg-zinc-800 text-zinc-400'} px-3 py-1.5 flex items-center text-sm`}
-          >
-            {isSimulating && (
-              <span className="relative flex h-3 w-3 mr-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-              </span>
-            )}
-            {isSimulating ? 'Live Updates' : 'Paused'}
-          </Badge>
-          <Button 
-            size="default" 
-            variant="outline" 
-            className="text-sm bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
-            onClick={fetchBlocks}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Loading...
-              </>
-            ) : (
-              'Refresh'
-            )}
-          </Button>
-          {/* <Button
-            size="sm"
-            variant="secondary"
-            className="text-xs bg-blue-800/50 border-blue-700 text-blue-300 hover:bg-blue-700/50"
-            onClick={() => {
-              // Attempt direct fetch with detailed debugging
-              console.log("MANUAL DEBUG: Testing API connection...");
-              
-              const testAPI = async () => {
-                try {
-                  console.log("MANUAL DEBUG: Fetch started");
-                  const startTime = performance.now();
-                  
-                  const response = await fetch("http://localhost:3000/blocks", {
-                    method: 'GET',
-                    headers: {
-                      'Accept': 'application/json',
-                    },
-                    mode: 'cors',
-                    cache: 'no-store',
-                  });
-                  
-                  const endTime = performance.now();
-                  console.log(`MANUAL DEBUG: Fetch completed in ${(endTime - startTime).toFixed(2)}ms`);
-                  console.log("MANUAL DEBUG: Response status:", response.status, response.statusText);
-                  console.log("MANUAL DEBUG: Response headers:", [...response.headers.entries()]);
-                  
-                  if (!response.ok) {
-                    throw new Error(`Status: ${response.status}`);
-                  }
-                  
-                  const contentType = response.headers.get("content-type");
-                  console.log("MANUAL DEBUG: Content-Type:", contentType);
-                  
-                  const data = await response.json();
-                  console.log("MANUAL DEBUG: API response data:", data);
-                  
-                  if (data && data.blocks && Array.isArray(data.blocks)) {
-                    console.log("MANUAL DEBUG: Valid data structure received");
-                    
-                    // Count transactions
-                    let totalTxs = 0;
-                    data.blocks.forEach((block: BlockFromAPI) => {
-                      totalTxs += block.transactions.length;
-                    });
-                    
-                    console.log(`MANUAL DEBUG: Received ${data.blocks.length} blocks with ${totalTxs} total transactions`);
-                    alert(`Success! Received ${data.blocks.length} blocks with ${totalTxs} total transactions. Check console for details.`);
-                  } else {
-                    console.error("MANUAL DEBUG: Invalid data structure");
-                    alert("API responded but with invalid data structure");
-                  }
-                } catch (err) {
-                  console.error("MANUAL DEBUG: Error occurred:", err);
-                  alert(`API test failed: ${err instanceof Error ? err.message : String(err)}`);
-                }
-              };
-              
-              testAPI();
-            }}
-          >
-            Debug API
-          </Button> */}
-        </div>
-      </CardHeader>
+        {/* Edge highlight effect - ENHANCED TO BE MORE VISIBLE */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
+        <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
+        <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
+        
+        {/* Corner accent decorations - NEW - MADE SMALLER */}
+        <div className="absolute top-0 left-0 w-6 h-6 border-t-3 border-l-3 border-purple-500 opacity-80 rounded-tl-md"></div>
+        <div className="absolute top-0 right-0 w-6 h-6 border-t-3 border-r-3 border-purple-500 opacity-80 rounded-tr-md"></div>
+        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-3 border-l-3 border-purple-500 opacity-80 rounded-bl-md"></div>
+        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-3 border-r-3 border-purple-500 opacity-80 rounded-br-md"></div>
+      </div>
       
-      <CardContent className="p-8">
-        {error && (
-          <div className="rounded-md bg-red-500/10 border border-red-500/20 p-3 mb-4 text-red-400 text-sm">
-            <h3 className="font-bold">Error</h3>
-            <p>{error}</p>
-            
-            {/* Debug info */}
-            <div className="mt-2 pt-2 border-t border-red-500/20">
-              <h4 className="font-semibold">Debug Information:</h4>
-              <p>API URL: http://localhost:3000/blocks</p>
-              <p>Make sure the backend is running on port 3000.</p>
-              <div className="flex space-x-2 mt-2">
-                <button 
-                  onClick={() => {
-                    console.log("TEST: Direct API fetch attempt...");
-                    fetch('http://localhost:3000/blocks', {
-                      method: 'GET',
-                      headers: { 'Accept': 'application/json' },
-                      mode: 'cors',
-                      cache: 'no-store'
-                    })
-                    .then(res => {
-                      console.log("TEST: Response status:", res.status, res.statusText);
-                      console.log("TEST: Response headers:", [...res.headers.entries()]);
-                      if (!res.ok) throw new Error(`Status: ${res.status}`);
-                      return res.json();
-                    })
-                    .then(data => {
-                      console.log("TEST: Direct fetch result:", data);
-                      alert("API fetch successful! Check console for data.");
-                    })
-                    .catch(err => {
-                      console.error("TEST: Direct fetch error:", err);
-                      alert(`API fetch failed: ${err.message}`);
-                    });
-                  }}
-                  className="bg-red-600/30 hover:bg-red-600/50 text-red-300 text-xs px-2 py-1 rounded"
-                >
-                  Test API Connection
-                </button>
-                
-                <button
-                  onClick={() => {
-                    console.log("TEST: Checking if server is reachable via proxy...");
-                    
-                    // Create a simple image ping - this can bypass some CORS issues for testing
-                    const img = new Image();
-                    
-                    img.onload = () => { 
-                      console.log("TEST: Server appears to be reachable (ping successful)");
-                      alert("Server appears to be reachable!"); 
-                    };
-                    
-                    img.onerror = () => { 
-                      console.log("TEST: Server cannot be reached (ping failed)");
-                      alert("Cannot reach server - check if it's running!"); 
-                    };
-                    
-                    // Set source to trigger request (timestamp to prevent caching)
-                    img.src = `http://localhost:3000/status?nocache=${Date.now()}`; 
-                  }}
-                  className="bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-300 text-xs px-2 py-1 rounded"
-                >
-                  Check Server
-                </button>
+      {/* Main content wrapper with visible border */}
+      <div className="relative z-10 border-2 border-purple-500/30 rounded-xl overflow-hidden shadow-[0_0_24px_-5px_rgba(168,85,247,0.3)]">
+        {/* Header for compartment - REDUCED PADDING */}
+        <div className="relative z-10 mb-4 bg-black/50 border-b border-purple-500/50 px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <div className="h-6 w-1 bg-purple-500 rounded-full"></div>
+              <h2 className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Proposed Block Batched </h2>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="px-3 py-1 rounded-full border border-purple-500/50 bg-purple-500/10 backdrop-blur-sm">
+                <div className="text-xs font-mono text-purple-200 flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                  <span>LIVE VISUALIZATION</span>
+                </div>
               </div>
             </div>
           </div>
-        )}
-        
-        <div 
-          ref={scrollContainerRef}
-          className="flex items-stretch gap-8 overflow-x-auto pb-8 pt-2 hide-scrollbar"
-          style={{ direction: 'rtl' }} // Display newest blocks on the left by reversing direction
-        >
-          {loading && blocks.length === 0 ? (
-            <div className="flex items-center justify-center w-full py-16">
-              <Loader2 className="h-12 w-12 text-purple-500 animate-spin mr-3" />
-              <p className="text-zinc-400 text-lg">Loading blocks...</p>
+        </div>
+      
+        {/* Main Card - SMALLER PADDING */}
+        <div className="relative z-10 px-4 pb-4">
+          <Card className="w-full border-0 shadow-[0_0_40px_-10px_rgba(168,85,247,0.25)] overflow-hidden relative bg-gradient-to-br from-black to-zinc-900/95">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIGZpbGwtb3BhY2l0eT0iMC4wNDUiPjxwYXRoIGQ9Ik0zNiAxOGMxLjIyOCAwIDIuNDM4LjMgMy41MzIuODkxYTE3LjA1IDE3LjA1IDAgMCAxIDIuOTMyIDEuNjQ1Yy44OS42MzUgMS43NDQgMS4zNiAyLjU2MSAyLjE3N2E5OS4xODMgOTkuMTgzIDAgMCAxIDIuMTc4IDIuNTZjLjYzNS44OS0uODkxIDIuOTE4LTEuNjQ1IDIuOTMyQTguMDk1IDguMDk1IDAgMCAwIDQyIDM2YTggOCAwIDEgMC0xNiAwIDguMDk1IDguMDk1IDAgMCAwIDMuNTU5IDYuNjg4Yy43NTQuMDE0IDIuMzE2LTEuNiAyLjk1MS0yLjQ5YTk5LjMwNCA5OS4zMDQgMCAwIDEgMi4xNzgtMi41NjEgMjAuNzkzIDIwLjc5MyAwIDAgMSAyLjU2LTIuMTc3IDE3LjA1IDE3LjA1IDAgMCAxIDIuOTMzLTEuNjQ1QTcuOTQgNy45NCAwIDAgMSAzNiAxOHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+            
+            {/* Title Section - SMALLER TEXT AND PADDING */}
+            <div className="relative z-10 border-b border-purple-800/60 bg-black/40 px-4 py-3">
+              <h1 className="text-xl font-bold text-white flex items-center">
+                <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">Proposed Block</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-2 animate-pulse"></div>
+              </h1>
             </div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              {blocks.map((block, index) => (
-                <motion.div
-                  key={block.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                  className={`flex-shrink-0 w-96 p-6 rounded-xl border-2 cursor-pointer shadow-xl ${
-                    index === 0 
-                      ? "bg-purple-900/40 border-purple-600" 
-                      : "bg-zinc-800/90 border-zinc-600"
-                  }`}
-                  onClick={() => handleBlockClick(block)}
-                  style={{ direction: 'ltr' }}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className={`font-semibold text-xl ${index === 0 ? "text-purple-200" : "text-white"}`}>
-                      Block {block.id}
-                    </h3>
-                    {index === 0 && (
-                      <Badge className="bg-purple-600/70 text-purple-100 border-purple-500 text-base px-3 py-1">Latest</Badge>
-                    )}
+
+            {/* Blockchain node connectors */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute w-full h-full">
+                {[...Array(8)].map((_, i) => (
+                  <div 
+                    key={`connector-${i}`} 
+                    className="absolute w-px h-full bg-gradient-to-b from-transparent via-purple-500/20 to-transparent"
+                    style={{ left: `${(i + 1) * 12.5}%` }}
+                  />
+                ))}
+                {[...Array(6)].map((_, i) => (
+                  <div 
+                    key={`h-connector-${i}`} 
+                    className="absolute h-px w-full bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"
+                    style={{ top: `${(i + 1) * 16.66}%` }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Block metadata header with Public Good Reward metrics - SMALLER PADDING AND TEXT */}
+            <div className="relative z-10 bg-black/60 py-2 px-4 border-b border-purple-800/30">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="px-2 py-1.5 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                  <div className="text-xs font-mono text-purple-300 mb-0.5">Public Good Reward</div>
+                  <div className="text-xs font-mono text-white font-medium flex items-center">
+                    <span className="text-emerald-400 mr-1">+</span>
+                    {blocks.reduce((acc, block) => acc + parseFloat(block.expectedMEV), 0).toFixed(3)} ETH
                   </div>
-                  
-                  <div className="space-y-4 text-lg">
-                    {!block.isSequential ? (
-                      <div className="flex justify-between items-center">
-                        <span className="text-zinc-300">Transactions</span>
-                        <span className={index === 0 ? "text-purple-200" : "text-white"}>
-                          <span className="text-blue-200 font-semibold">{getParallelizableTxCount(block)}</span>
-                          <span className="mx-1">/</span> 
-                          <span className="font-semibold">{block.transactions}</span>
-                        </span>
+                  <div className="text-[10px] text-zinc-500 mt-0.5">Rewards block proposers</div>
+                </div>
+                <div className="px-2 py-1.5 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                  <div className="text-xs font-mono text-purple-300 mb-0.5">Total Transaction Fees</div>
+                  <div className="text-xs font-mono text-white font-medium">
+                    {blocks.reduce((acc, block) => acc + parseFloat(block.totalFees), 0).toFixed(3)} ETH
+                  </div>
+                  <div className="text-[10px] text-zinc-500 mt-0.5">Combined fees across batches</div>
+                </div>
+                <div className="px-2 py-1.5 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                  <div className="text-xs font-mono text-purple-300 mb-0.5">Total Transactions</div>
+                  <div className="text-xs font-mono text-white font-medium">
+                    {blocks.reduce((acc, block) => acc + block.transactions, 0).toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-zinc-500 mt-0.5">Combined across all batches</div>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="relative z-10 p-4 bg-black/30">
+              {error && (
+                <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 mb-4 text-red-400 text-xs">
+                  <h3 className="font-bold flex items-center">
+                    <span className="mr-1">⚠️</span> Error
+                  </h3>
+                  <p>{error}</p>
+                </div>
+              )}
+              
+              {/* Blocks container with blockchain styling - SMALLER PADDING */}
+              <div className="relative rounded-xl border-2 border-purple-800/50 bg-black/60 p-4 backdrop-blur-sm">
+                {/* Decorative hash header - SMALLER */}
+                <div className="absolute -top-2 left-6 px-3 py-0.5 bg-black rounded-full border-2 border-purple-800/50 shadow-lg">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500/80 animate-pulse"></div>
+                    <div className="text-[10px] font-mono text-purple-400">BLOCK CONTENTS</div>
+                  </div>
+                </div>
+
+                {/* Corner decorations - SMALLER */}
+                <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-purple-600/50 -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-purple-600/50 translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-purple-600/50 -translate-x-1/2 translate-y-1/2"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-purple-600/50 translate-x-1/2 translate-y-1/2"></div>
+
+                {/* Side decorations - SMALLER */}
+                <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
+                  <div className="w-0.5 h-14 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent rounded"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500/50"></div>
+                  <div className="w-0.5 h-14 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent rounded"></div>
+                </div>
+                <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
+                  <div className="w-0.5 h-14 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent rounded"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500/50"></div>
+                  <div className="w-0.5 h-14 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent rounded"></div>
+                </div>
+
+                {/* Background grid pattern with animation */}
+                <div className="absolute inset-0 grid grid-cols-6 gap-px pointer-events-none overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/[0.05] to-transparent opacity-50"></div>
+                  {[...Array(36)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="bg-purple-500/[0.02] border border-purple-500/[0.05] relative overflow-hidden"
+                    >
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full animate-shimmer"
+                        style={{
+                          animationDelay: `${i * 0.1}s`
+                        }}
+                      ></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Content wrapper with inner border - SMALLER PADDING */}
+                <div className="relative border border-purple-500/10 rounded-lg p-3">
+                  {/* Grid layout for blocks - SMALLER GAP */}
+                  <div className="grid grid-cols-3 gap-3 relative">
+                    {loading && blocks.length === 0 ? (
+                      <div className="col-span-3 flex items-center justify-center py-10">
+                        <Loader2 className="h-8 w-8 text-purple-500 animate-spin mr-2" />
+                        <p className="text-zinc-400 text-base">Loading blocks...</p>
                       </div>
                     ) : (
-                      <div className="flex justify-between items-center">
-                        <span className="text-zinc-300">Transactions</span>
-                        <span className={`${index === 0 ? "text-purple-200" : "text-white"} font-semibold`}>{block.transactions}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-zinc-300">Approximated Total Fees</span>
-                      <span className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{block.totalFees} ETH</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-zinc-300">Type</span>
-                      <Badge className={`
-                        text-base px-3 py-1 
-                        ${block.isSequential 
-                          ? "bg-orange-500/30 text-orange-100 border-orange-400" 
-                          : "bg-blue-500/30 text-blue-100 border-blue-400"}
-                      `}>
-                        {block.isSequential ? "Sequential" : "Parallel"}
-                      </Badge>
-                    </div>
-                    
-                    {!block.isSequential && (
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-zinc-300">Parallel Ratio</span>
-                        <span className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>
-                          {Math.round((getParallelizableTxCount(block) / block.transactions) * 100)}%
-                        </span>
-                      </div>
+                      <AnimatePresence mode="popLayout">
+                        {blocks.map((block, index) => {
+                          // Calculate the percentage of total transactions this block represents
+                          const totalTxs = blocks.reduce((acc, curr) => acc + curr.transactions, 0);
+                          const txPercentage = Math.round((block.transactions / totalTxs) * 100);
+                          
+                          // Generate a color based on transaction percentage
+                          // Higher percentages get deeper color, lower get lighter
+                          const getBackgroundColor = (percent: number, isSequential: boolean) => {
+                            if (index === 0) return isSequential ? "bg-orange-900/60" : "bg-purple-900/60"; // Latest block
+                            
+                            // For sequential blocks - use orange palette
+                            if (isSequential) {
+                              if (percent >= 40) return "bg-orange-800/50"; 
+                              if (percent >= 30) return "bg-orange-700/45";
+                              if (percent >= 20) return "bg-orange-600/40";
+                              if (percent >= 10) return "bg-orange-500/35";
+                              return "bg-orange-400/30";
+                            }
+                            
+                            // For parallel blocks - use purple palette
+                            if (percent >= 40) return "bg-purple-800/50"; 
+                            if (percent >= 30) return "bg-purple-700/45";
+                            if (percent >= 20) return "bg-purple-600/40";
+                            if (percent >= 10) return "bg-purple-500/35";
+                            return "bg-purple-400/30";
+                          };
+                          
+                          // Generate a border color that matches the background intensity
+                          const getBorderColor = (percent: number, isSequential: boolean) => {
+                            if (index === 0) return isSequential ? "border-orange-600" : "border-purple-600"; // Latest block
+                            
+                            // For sequential blocks - use orange palette
+                            if (isSequential) {
+                              if (percent >= 40) return "border-orange-600";
+                              if (percent >= 30) return "border-orange-500"; 
+                              if (percent >= 20) return "border-orange-400";
+                              if (percent >= 10) return "border-orange-300";
+                              return "border-orange-200";
+                            }
+                            
+                            // For parallel blocks - use purple palette
+                            if (percent >= 40) return "border-purple-600";
+                            if (percent >= 30) return "border-purple-500"; 
+                            if (percent >= 20) return "border-purple-400";
+                            if (percent >= 10) return "border-purple-300";
+                            return "border-purple-200";
+                          };
+                          
+                          const backgroundClass = getBackgroundColor(txPercentage, block.isSequential);
+                          const borderClass = getBorderColor(txPercentage, block.isSequential);
+                          
+                          return (
+                            <motion.div
+                              key={block.id}
+                              initial={{ opacity: 0, y: 16 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.3 }}
+                              className={`relative rounded-lg border-2 p-3 backdrop-blur-sm cursor-pointer transform transition-all duration-200 hover:scale-[1.02] ${backgroundClass} ${borderClass} ${
+                                index === 0 
+                                  ? "shadow-[0_0_20px_-12px_rgba(168,85,247,0.5)]" 
+                                  : "hover:border-purple-600/50"
+                              }`}
+                              onClick={() => handleBlockClick(block)}
+                            >
+                              {/* Top connector */}
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-px h-2 bg-purple-500/50"></div>
+                              
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className={`font-semibold text-sm ${index === 0 ? "text-purple-200" : "text-white"}`}>
+                                  Batch {block.id}
+                                </h3>
+                                <div className="flex space-x-1">
+                                  {index === 0 && (
+                                    <Badge className="bg-purple-600/70 text-purple-100 border-purple-500 text-xs px-2 py-0.5">Latest</Badge>
+                                  )}
+                                  <Badge className="bg-purple-700/50 text-purple-100 border-purple-500/30 text-[10px] px-1.5 py-0.5">
+                                    {txPercentage}% Total
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                {!block.isSequential ? (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-zinc-300 text-xs">Transactions</span>
+                                    <span className={index === 0 ? "text-purple-200 text-xs" : "text-white text-xs"}>
+                                      <span className="text-blue-200 font-semibold">{getParallelizableTxCount(block)}</span>
+                                      <span className="mx-1">/</span> 
+                                      <span className="font-semibold">{block.transactions}</span>
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-zinc-300 text-xs">Transactions</span>
+                                    <span className={`${index === 0 ? "text-purple-200" : "text-white"} font-semibold text-xs`}>{block.transactions}</span>
+                                  </div>
+                                )}
+                                
+                                <div className="flex justify-between items-center py-0.5">
+                                  <span className="text-zinc-300 text-xs">Total Fees</span>
+                                  <span className={index === 0 ? "text-purple-200 font-semibold text-xs" : "text-white font-semibold text-xs"}>{block.totalFees} ETH</span>
+                                </div>
+                                
+                                <div className="flex items-center justify-between py-0.5">
+                                  <span className="text-zinc-300 text-xs">Type</span>
+                                  <Badge className={`
+                                    px-2 py-0.5 text-xs
+                                    ${block.isSequential 
+                                      ? "bg-orange-500/30 text-orange-100 border-orange-400" 
+                                      : "bg-blue-500/30 text-blue-100 border-blue-400"}
+                                  `}>
+                                    {block.isSequential ? "Sequential" : "Parallel"}
+                                  </Badge>
+                                </div>
+                                
+                                {!block.isSequential && (
+                                  <div className="flex justify-between items-center py-0.5">
+                                    <span className="text-zinc-300 text-xs">Percent Tx in Batch</span>
+                                    <div className="flex items-center">
+                                      <div className="w-14 h-1 rounded-full bg-zinc-700 mr-1.5 overflow-hidden">
+                                        <div 
+                                          className="h-full bg-blue-500 rounded-full"
+                                          style={{ 
+                                            width: `${Math.round((getParallelizableTxCount(block) / block.transactions) * 100)}%`,
+                                            transition: 'width 0.3s ease-in-out'
+                                          }}
+                                        />
+                                      </div>
+                                      <span className={index === 0 ? "text-purple-200 font-semibold text-xs" : "text-white font-semibold text-xs"}>
+                                        {Math.round((getParallelizableTxCount(block) / blocks.reduce((acc, curr) => acc + curr.transactions, 0)) * 100)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Bottom connector */}
+                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-px h-2 bg-purple-500/50"></div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                     )}
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
+                </div>
+
+                {/* Decorative hash footer - SMALLER */}
+                <div className="absolute -bottom-2 right-6 px-3 py-0.5 bg-black rounded-full border-2 border-purple-800/50 shadow-lg">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="text-[10px] font-mono text-purple-400/60 w-800">{(() => {
+                      return `By Sanjay Amirthraj and Souradeep Das`;
+                    })()}</div>
+                    <div className="w-1 h-1 rounded-full bg-purple-500/80 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Actions row with enhanced styling - SMALLER BUTTONS */}
+              <div className="flex justify-between mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-sm bg-zinc-800/80 border-zinc-700/80 text-zinc-300 hover:bg-zinc-700 px-3 backdrop-blur-sm"
+                  onClick={fetchBlocks}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> 
+                      Loading...
+                    </>
+                  ) : (
+                    'Fetch Latest Blocks'
+                  )}
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-zinc-400 border border-zinc-800 bg-black/30 px-2 py-1 rounded-md">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={isSimulating ? "destructive" : "default"}
+                    className={`text-sm px-3 backdrop-blur-sm ${isSimulating ? "bg-red-600/90 hover:bg-red-700" : "bg-purple-600/90 hover:bg-purple-700"}`}
+                    onClick={handleSimulationToggle}
+                  >
+                    {isSimulating ? (
+                      <div className="flex items-center">
+                        <div className="mr-1.5 relative">
+                          <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-ping absolute"></div>
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full relative"></div>
+                        </div>
+                        Stop Auto Updates
+                      </div>
+                    ) : (
+                      'Start Auto Updates'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+            
+            {/* Bottom border decoration */}
+            <div className="relative h-1.5 w-full bg-gradient-to-r from-purple-900/50 via-blue-800/50 to-purple-900/50"></div>
+          </Card>
         </div>
-        
-        {/* Actions row */}
-        <div className="flex justify-between mt-8">
-          <Button
-            size="lg"
-            variant="outline"
-            className="text-base bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 px-6"
-            onClick={fetchBlocks}
-            disabled={loading}
-          >
-            Fetch Latest Blocks
-          </Button>
-          
-          <Button
-            size="lg"
-            variant={isSimulating ? "destructive" : "default"}
-            className={`text-base px-6 ${isSimulating ? "bg-red-600 hover:bg-red-700" : "bg-purple-600 hover:bg-purple-700"}`}
-            onClick={handleSimulationToggle}
-          >
-            {isSimulating ? 'Stop Auto Updates' : 'Start Auto Updates'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {/* Outer border indication with animated glow - SMALLER */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 via-purple-600/40 to-purple-500/20 rounded-xl blur-sm group-hover:opacity-100 animate-pulse-slow pointer-events-none"></div>
+      
+      {/* Complementary accent lights - SMALLER */}
+      <div className="absolute top-8 left-8 w-0.5 h-8 bg-purple-500/30 rounded-full blur-sm"></div>
+      <div className="absolute bottom-8 right-8 w-0.5 h-8 bg-purple-500/30 rounded-full blur-sm"></div>
+    </div>
   );
 };
 
 export default BlockStreamVisualization; 
+
+// Add some custom CSS keyframes animations to global style
+// NOTE: You'll need to add this to your globals.css or equivalent
+/*
+@keyframes marquee-slow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-slow {
+  animation: marquee-slow 20s linear infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+*/ 

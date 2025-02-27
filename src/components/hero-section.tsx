@@ -47,7 +47,7 @@ const HeroSection = () => {
         <div>
           <h3 className="text-lg font-medium text-purple-400 mb-2">AVS Slashing Conditions</h3>
           <p className="text-sm text-zinc-400">
-            The AVS (Attestation Verification Service) with its slashing conditions ensures these block constitutions are actually valid by validating the transaction sequences and dependencies, preventing invalid parallelization attempts.
+            The AVS with its slashing conditions ensures these block constitutions are actually valid by validating the transaction sequences and dependencies, preventing invalid parallelization attempts.
           </p>
         </div>
         
@@ -57,7 +57,7 @@ const HeroSection = () => {
             Parallel execution can only be successful if:
           </p>
           <ul className="text-sm text-zinc-400 space-y-1 list-disc list-inside mt-2">
-            <li>There's no time penalty due to incorrectly formed batches</li>
+            <li>There are no incorrectly formed batches</li>
             <li>The batches are maximally parallelizable</li>
             <li>Transaction dependencies are properly analyzed</li>
             <li>Block proposers follow optimal parallelization strategies</li>
