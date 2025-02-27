@@ -114,7 +114,7 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
                       <span className="text-sm font-medium">{block.transactions.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Total Fees</span>
+                      <span className="text-sm text-gray-500">Approximated Total Fees</span>
                       <span className="text-sm font-medium">{block.totalFees} ETH</span>
                     </div>
                   </div>
@@ -150,7 +150,7 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Economic Metrics</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Total Fees</span>
+                      <span className="text-sm text-gray-500">Approximated Total Fees</span>
                       <span className="text-sm font-medium">{block.totalFees} ETH</span>
                     </div>
                     <div className="flex justify-between">
@@ -292,7 +292,7 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-500">Total Fees</span>
+                      <span className="text-sm text-gray-500">Approximated Total Fees</span>
                       <span className="text-sm font-medium">{block.totalFees} ETH</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">

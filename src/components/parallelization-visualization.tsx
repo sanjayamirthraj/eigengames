@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // Interface for API response
 interface BlockFromAPI {
@@ -111,10 +112,8 @@ const ParallelizationVisualization = ({
       
       // Convert the API data to the format expected by the component
       const newBatches: TransactionBatch[] = data.blocks.map(block => {
-        // Calculate a deterministic value based on transaction count for fees/MEV
-        // instead of completely random values
         const txCount = block.transactions.length;
-        const totalFees = (0.1 + (txCount * 0.02)).toFixed(3);
+        const totalFees = (txCount * 0.003).toFixed(3);
         const expectedMEV = (0.05 + (txCount * 0.01)).toFixed(3);
         
         return {
@@ -134,7 +133,20 @@ const ParallelizationVisualization = ({
       
       // Also update the public good reward (using a deterministic value)
       const totalTransactions = newBatches.reduce((sum, batch) => sum + batch.transactions, 0);
-      const newReward = (0.2 + (totalTransactions * 0.005)).toFixed(3);
+      const parallelizableTxCount = newBatches.reduce((sum, batch) => {
+        return sum + (batch.isSequential ? 0 : batch.transactions);
+      }, 0);
+      
+      // Calculate total fees across all batches
+      const totalFees = newBatches.reduce((sum, batch) => {
+        return sum + parseFloat(batch.totalFees);
+      }, 0).toFixed(3);
+      
+      // Calculate public good reward based on the ratio of parallelizable to total transactions
+      const newReward = totalTransactions > 0 
+        ? ((parallelizableTxCount / totalTransactions) * (parseFloat(totalFees) / 10)).toFixed(3)
+        : "0.000";
+      
       setPublicGoodReward(newReward);
       
       setLastUpdated(new Date());
@@ -199,6 +211,17 @@ const ParallelizationVisualization = ({
 
   // Calculate total transactions across all batches
   const totalTransactions = batches.reduce((sum, batch) => sum + batch.transactions, 0);
+  
+  // Calculate total parallelizable transactions
+  const parallelizableTxCount = batches.reduce((sum, batch) => {
+    return sum + (batch.isSequential ? 0 : batch.transactions);
+  }, 0);
+  
+  // Calculate public good reward based on the ratio of parallelizable to total transactions
+  // multiplied by 1/10 of the total transaction fees
+  const calculatedPublicGoodReward = totalTransactions > 0 
+    ? ((parallelizableTxCount / totalTransactions) * (parseFloat(totalTransactionFees) / 10)).toFixed(3)
+    : "0.000";
 
   return (
     <div className="space-y-6">
@@ -227,9 +250,9 @@ const ParallelizationVisualization = ({
         {/* Transaction Batches Section - 3/4 width */}
         <div className="col-span-3">
           <Card className="glass-card overflow-hidden h-full">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg text-black">Transaction Batches & Transactions</CardTitle>
+                <Badge className="inline-flex items-center w-auto px-2.5 py-1 text-sm font-semibold bg-white/90 text-indigo-800 hover:bg-white/95 border-none">Transaction Batches & Transactions</Badge>
                 {loading && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
               </div>
             </CardHeader>
@@ -296,7 +319,7 @@ const ParallelizationVisualization = ({
                               <p className="font-medium">{batch.transactions}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground">Total Fees</p>
+                              <p className="text-xs text-muted-foreground">Approximated Total Fees</p>
                               <p className="font-medium">{batch.totalFees} ETH</p>
                             </div>
                             <div>
@@ -346,8 +369,8 @@ const ParallelizationVisualization = ({
         {/* Metrics Panel - 1/4 width */}
         <div className="col-span-1">
           <Card className="glass-card overflow-hidden h-full">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-              <CardTitle className="text-lg text-black">Metrics</CardTitle>
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-blue-500">
+              <Badge className="inline-flex items-center w-auto px-2.5 py-1 text-sm font-semibold bg-white/90 text-indigo-800 hover:bg-white/95 border-none">Metrics</Badge>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="glass-panel p-4 rounded-xl">
@@ -357,7 +380,7 @@ const ParallelizationVisualization = ({
                   </svg>
                   <p className="text-sm font-medium text-indigo-600">Public Good Reward</p>
                 </div>
-                <p className="text-xl font-bold">{publicGoodReward} ETH</p>
+                <p className="text-xl font-bold">{calculatedPublicGoodReward} ETH</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Rewards block proposers for including suggested blocks
                 </p>

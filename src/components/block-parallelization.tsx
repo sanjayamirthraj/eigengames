@@ -278,7 +278,7 @@ const BlockParallelization = ({
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Total Fees</span>
+                    <span className="text-sm text-gray-500">Approximated Total Fees</span>
                     <span className="text-sm font-medium">{block.totalFees} ETH</span>
                   </div>
                   
@@ -335,7 +335,7 @@ const BlockParallelization = ({
                     <span className="text-sm font-medium">{getTotalTransactions(blocks[selectedBlockIndex])}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Total Fees</span>
+                    <span className="text-sm text-gray-500">Approximated Total Fees</span>
                     <span className="text-sm font-medium">{blocks[selectedBlockIndex].totalFees} ETH</span>
                   </div>
                 </div>

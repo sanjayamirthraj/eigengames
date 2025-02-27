@@ -85,7 +85,7 @@ const BlockStream = ({
       const totalFees = (totalTx * 0.01).toFixed(3);
       
       // Determine block type based on majority of transactions
-      const type = parallelCount >= sequentialCount ? 'parallel' : 'sequential';
+      const type = (parallelCount >= sequentialCount ? 'parallel' : 'sequential') as 'parallel' | 'sequential';
       
       return {
         blockNumber: parseInt(blockNumber),
@@ -324,7 +324,7 @@ const BlockStream = ({
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-xs text-gray-500">Total Fees</span>
+                  <span className="text-xs text-gray-500">Approximated Total Fees</span>
                   <span className="text-xs font-medium">{block.totalFees} ETH</span>
                 </div>
                 

@@ -9,6 +9,7 @@ import { BlockBatch } from "@/types/block";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
+
 interface BlockStreamProps {
   autoScroll?: boolean;
   onBlockSelect?: (block: BlockBatch) => void;
@@ -102,7 +103,7 @@ const BlockStreamVisualization = ({
         return {
           id: `#${block.groupId}`,
           transactions: txCount,
-          totalFees: (Math.random() * 0.5 + 0.1).toFixed(3),
+          totalFees: (txCount * 0.003).toFixed(3), // Calculate fees based on tx count and type
           expectedMEV: (Math.random() * 0.3 + 0.05).toFixed(3),
           isSequential: isSequential,
           sequentialCount: isSequential ? txCount : 0,
@@ -233,7 +234,7 @@ const BlockStreamVisualization = ({
               'Refresh'
             )}
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             variant="secondary"
             className="text-xs bg-blue-800/50 border-blue-700 text-blue-300 hover:bg-blue-700/50"
@@ -295,7 +296,7 @@ const BlockStreamVisualization = ({
             }}
           >
             Debug API
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       
@@ -421,7 +422,7 @@ const BlockStreamVisualization = ({
                     )}
                     
                     <div className="flex justify-between">
-                      <span className="text-zinc-300">Total Fees</span>
+                      <span className="text-zinc-300">Approximated Total Fees</span>
                       <span className={index === 0 ? "text-purple-200" : "text-white"}>{block.totalFees} ETH</span>
                     </div>
                     
