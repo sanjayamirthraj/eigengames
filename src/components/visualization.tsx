@@ -1013,7 +1013,7 @@ const EthereumTransactionBatching = () => {
             // Run block flash animation
             await animateBlockFlash();
             
-            const filledBlockIndex = Math.floor(txIndex / 10);
+            // const filledBlockIndex = Math.floor(txIndex / 10);
             // Flash the block
             for (let flash = 0; flash < 3; flash++) {
               indivBlockRef.current.material.emissiveIntensity = 0.5;

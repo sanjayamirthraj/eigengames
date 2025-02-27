@@ -1,13 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useBlockStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 const HeroSection = () => {
   const { addNewBlock, startSimulation, stopSimulation, isSimulating } = useBlockStore();
+  const [isVisualizationsOpen, setIsVisualizationsOpen] = useState(false);
   
   const handleSimulationToggle = () => {
     if (isSimulating) {
@@ -33,6 +41,29 @@ const HeroSection = () => {
           Visualize and optimize transaction batches for parallel execution on Ethereum. Increase block efficiency, maximize rewards, 
           and contribute to scaling the network through parallelization.
         </p>
+        
+        <div className="flex gap-4 mb-6">
+          <Dialog open={isVisualizationsOpen} onOpenChange={setIsVisualizationsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
+                Open Visualizations
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent">
+              <div className="relative w-full h-full">
+                <DialogClose className="absolute right-2 top-2 z-50 rounded-full bg-zinc-900/80 p-1.5 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2">
+                  <X className="h-5 w-5 text-white" />
+                  <span className="sr-only">Close</span>
+                </DialogClose>
+                <iframe 
+                  src="/visualizations" 
+                  className="w-full h-full border-0 rounded-lg shadow-xl" 
+                  title="Visualizations"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       
       {/* Parallelization explanation */}
