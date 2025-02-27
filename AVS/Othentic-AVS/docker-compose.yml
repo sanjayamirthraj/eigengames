@@ -97,6 +97,15 @@ services:
     networks:
       p2p:
         ipv4_address: 10.8.0.101
+  parallel-exec-helper:
+    build:
+      context: ../parallel-exec-helper
+      dockerfile: ./Dockerfile
+    command: ["node", "index.js"]
+    env_file: .env
+    networks:
+      p2p:
+        ipv4_address: 10.8.0.102
 networks:
   p2p:
     driver: bridge
