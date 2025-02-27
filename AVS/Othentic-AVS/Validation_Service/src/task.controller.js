@@ -8,10 +8,12 @@ const router = Router()
 
 router.post("/validate", async (req, res) => {
     var proofOfTask = req.body.proofOfTask;
-    var blockHash = req.body.blockHash;
-    console.log(`Validate task: proof of task: ${proofOfTask} ${blockHash}`);
+    var blockHash = req.body.data;
+    var blockHashString = Buffer.from(blockHash.replace(/^0x/, ''), 'hex').toString('utf8');
+    console.log("Block hash:", blockHashString);
+    console.log(`Validate task: proof of task: ${proofOfTask} ${blockHashString}`);
     try {
-        const result = await validatorService.validate(proofOfTask, blockHash);
+        const result = await validatorService.validate(proofOfTask, blockHashString);
         console.log('Vote:', result ? 'Approve' : 'Not Approved');
         return res.status(200).send(new CustomResponse(result));
     } catch (error) {
