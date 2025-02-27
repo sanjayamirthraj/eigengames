@@ -34,6 +34,42 @@ interface ParallelizationVisualizationProps {
   refreshInterval?: number;
 }
 
+// Helper function to estimate MEV using the formula: MEV estimate = ∑(Pi × Vi) - C
+const estimateMEV = (txCount: number, isSequential: boolean): string => {
+  let totalMEV = 0;
+  
+  // Base cost for MEV extraction (higher for sequential due to complexity)
+  const baseCost = isSequential ? 0.028 : 0.015;
+  
+  // For each transaction, simulate probability and value
+  for (let i = 0; i < txCount; i++) {
+    // Probability of extracting value 
+    // Sequential batches have higher variance but potentially higher returns
+    const probability = isSequential 
+      ? Math.random() * 0.3 + 0.1  // 10-40% for sequential
+      : Math.random() * 0.2 + 0.3;  // 30-50% for parallelizable
+    
+    // Potential value (in ETH) - sequential has higher potential value
+    const value = isSequential
+      ? Math.random() * 0.04 + 0.01  // 0.01-0.05 ETH for sequential 
+      : Math.random() * 0.02 + 0.005; // 0.005-0.025 ETH for parallelizable
+    
+    // Add to total MEV
+    totalMEV += probability * value;
+  }
+  
+  // Apply base cost and transaction-based costs
+  const transactionCost = txCount * 0.0003; // Small cost per transaction
+  const totalCost = baseCost + transactionCost;
+  
+  // Final MEV value (with minimum of 0)
+  const finalMEV = Math.max(0, totalMEV - totalCost);
+  
+  // Add some randomness for more realistic values
+  const randomFactor = 0.9 + Math.random() * 0.2; // 0.9-1.1 multiplier
+  return (finalMEV * randomFactor).toFixed(3);
+};
+
 const ParallelizationVisualization = ({
   initialBatches,
   initialPublicGoodReward = "0.325",
@@ -114,7 +150,10 @@ const ParallelizationVisualization = ({
       const newBatches: TransactionBatch[] = data.blocks.map(block => {
         const txCount = block.transactions.length;
         const totalFees = (txCount * 0.003).toFixed(3);
-        const expectedMEV = (0.05 + (txCount * 0.01)).toFixed(3);
+        const isSequential = block.type === 'sequential';
+        
+        // Use the new MEV estimation function
+        const expectedMEV = estimateMEV(txCount, isSequential);
         
         return {
           id: `#${block.groupId}`,
@@ -123,7 +162,7 @@ const ParallelizationVisualization = ({
           txHashes: block.transactions, // Store the actual transaction hashes
           totalFees: totalFees,
           expectedMEV: expectedMEV,
-          isSequential: block.type === 'sequential',
+          isSequential: isSequential,
           type: block.type
         };
       });
@@ -281,7 +320,7 @@ const ParallelizationVisualization = ({
                       >
                         <div className="flex flex-col space-y-3">
                           <div className="flex justify-between items-center mb-4">
-                            <h3 className={`font-semibold text-xl ${index === 0 ? "text-purple-200" : "text-white"}`}>
+                            <h3 className="font-semibold text-xl text-white">
                               Batch {batch.id}
                             </h3>
                             <div className="flex items-center space-x-2">
@@ -319,15 +358,15 @@ const ParallelizationVisualization = ({
                           <div className="grid grid-cols-3 gap-2">
                             <div>
                               <span className="text-zinc-300">Transactions</span>
-                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.transactions}</p>
+                              <p className="text-white font-semibold">{batch.transactions}</p>
                             </div>
                             <div>
                               <span className="text-zinc-300">Total Fees</span>
-                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.totalFees} ETH</p>
+                              <p className="text-white font-semibold">{batch.totalFees} ETH</p>
                             </div>
                             <div>
-                              <span className="text-zinc-300">Expected MEV</span>
-                              <p className={index === 0 ? "text-purple-200 font-semibold" : "text-white font-semibold"}>{batch.expectedMEV} ETH</p>
+                              <span className="text-zinc-300">Approximated MEV</span>
+                              <p className="text-white font-semibold">{batch.expectedMEV} ETH</p>
                             </div>
                           </div>
                           

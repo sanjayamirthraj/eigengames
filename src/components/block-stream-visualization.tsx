@@ -228,8 +228,6 @@ const BlockStreamVisualization = ({
     
     // Background color logic
     const getBackgroundColor = (percent: number, isSequential: boolean) => {
-      if (index === 0) return isSequential ? "bg-orange-900/60" : "bg-purple-900/60"; // Latest block
-      
       // For sequential blocks - use orange palette
       if (isSequential) {
         if (percent >= 40) return "bg-orange-800/50"; 
@@ -249,8 +247,6 @@ const BlockStreamVisualization = ({
     
     // Border color logic
     const getBorderColor = (percent: number, isSequential: boolean) => {
-      if (index === 0) return isSequential ? "border-orange-600" : "border-purple-600"; // Latest block
-      
       // For sequential blocks - use orange palette
       if (isSequential) {
         if (percent >= 40) return "border-orange-600";
@@ -538,7 +534,7 @@ const BlockStreamVisualization = ({
                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-px h-2 bg-purple-500/50"></div>
                               
                               <div className="flex items-center justify-between mb-2">
-                                <h3 className={`font-semibold text-sm ${index === 0 ? "text-purple-200" : "text-white"}`}>
+                                <h3 className={`font-semibold text-sm text-white`}>
                                   Batch {block.id}
                                 </h3>
                                 <div className="flex space-x-1">
@@ -552,20 +548,20 @@ const BlockStreamVisualization = ({
                                 {!block.isSequential ? (
                                   <div className="flex justify-between items-center">
                                     <span className="text-zinc-300 text-xs">Transactions</span>
-                                    <span className={index === 0 ? "text-purple-200 text-xs" : "text-white text-xs"}>
+                                    <span className="text-white text-xs">
                                       <span className="text-blue-200 font-semibold">{getParallelizableTxCount(block)}</span>
                                     </span>
                                   </div>
                                 ) : (
                                   <div className="flex justify-between items-center">
                                     <span className="text-zinc-300 text-xs">Transactions</span>
-                                    <span className={`${index === 0 ? "text-purple-200" : "text-white"} font-semibold text-xs`}>{block.transactions}</span>
+                                    <span className="text-white font-semibold text-xs">{block.transactions}</span>
                                   </div>
                                 )}
                                 
                                 <div className="flex justify-between items-center py-0.5">
                                   <span className="text-zinc-300 text-xs">Total Fees</span>
-                                  <span className={index === 0 ? "text-purple-200 font-semibold text-xs" : "text-white font-semibold text-xs"}>{block.totalFees} ETH</span>
+                                  <span className="text-white font-semibold text-xs">{block.totalFees} ETH</span>
                                 </div>
                                 
                                 <div className="flex items-center justify-between py-0.5">
@@ -593,7 +589,7 @@ const BlockStreamVisualization = ({
                                           }}
                                         />
                                       </div>
-                                      <span className={index === 0 ? "text-purple-200 font-semibold text-xs" : "text-white font-semibold text-xs"}>
+                                      <span className="text-white font-semibold text-xs">
                                         {Math.round((getParallelizableTxCount(block) / blocks.reduce((acc, curr) => acc + curr.transactions, 0)) * 100)}%
                                       </span>
                                     </div>
