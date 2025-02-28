@@ -85,9 +85,9 @@ export default function Sidebar({ className }: SidebarProps) {
           {!collapsed && (
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-md bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold mr-2">
-                E
+                B
               </div>
-              <h1 className="text-lg font-medium gradient-text">Eigen</h1>
+              <h1 className="text-lg font-medium gradient-text">Batch'd</h1>
             </div>
           )}
           <button

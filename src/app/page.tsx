@@ -11,39 +11,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBlockStore } from "@/lib/store";
 
 export default function Home() {
-  const { addNewBlock, startSimulation, stopSimulation, isSimulating } = useBlockStore();
+  const { addNewBlock, startSimulation: startquery, stopSimulation: stopquery, isSimulating: isquerying } = useBlockStore();
   
-  // Add a new block when the page loads and start the simulation for continuous updates
   useEffect(() => {
-    // Add a small delay to ensure the store is initialized
     const timer = setTimeout(() => {
       addNewBlock();
       
-      // Start the simulation for continuous updates every 5 seconds
-      if (!isSimulating) {
-        startSimulation(5000); // Update every 5 seconds
+      if (!isquerying) {
+        startquery(5000);
       }
     }, 500);
     
-    // Clean up on unmount
     return () => {
       clearTimeout(timer);
-      stopSimulation(); // Stop the simulation when the component unmounts
+      stopquery();
     };
-  }, [addNewBlock, startSimulation, stopSimulation, isSimulating]);
+  }, [addNewBlock, startquery, stopquery, isquerying]);
   
   return (
     <DashboardLayout>
-      {/* Hero Section - Moved down */}
       <div suppressHydrationWarning={true}>
         <HeroSection />
       </div>
-      {/* Block Stream Visualization - Moved to top */}
       <div className="mb-8">
         <BlockStreamVisualization />
       </div>
-      
-      {/* Parallelization Visualization - Added after Block Stream */}
       <div className="mb-8">
         <Card className="bg-zinc-900 border border-zinc-800 shadow-sm rounded-lg overflow-hidden">
           <CardHeader>
@@ -54,15 +46,6 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
-      
-      {/* Transaction Comparison - Moved to third position
-      <div className="mb-8">
-        <TransactionComparison />
-      </div> */}
-    
-      
-      
-      {/* Ethereum Transaction Batching Visualization - Added to bottom */}
       
     </DashboardLayout>
   );

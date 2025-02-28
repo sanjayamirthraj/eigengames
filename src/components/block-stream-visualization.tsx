@@ -304,32 +304,22 @@ const BlockStreamVisualization = ({
   };
 
   return (
-    // Outer compartment wrapper with background effect - MAKING WIDER
     <div className="relative py-8 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 mx-auto max-w-screen-2xl">
-      {/* Background effect for compartmentalization */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Removing the first background layer (dark zinc) but keeping second layer */}
-        {/* Radial gradient decoration */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-zinc-950 to-zinc-950"></div>
-        {/* Grid pattern */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIGZpbGwtb3BhY2l0eT0iMC4wNDUiPjxwYXRoIGQ9Ik0zNiAxOGMxLjIyOCAwIDIuNDM4LjMgMy41MzIuODkxYTE3LjA1IDE3LjA1IDAgMCAxIDIuOTMyIDEuNjQ1Yy44OS42MzUgMS43NDQgMS4zNiAyLjU2MSAyLjE3N2E5OS4xODMgOTkuMTgzIDAgMCAxIDIuMTc4IDIuNTZjLjYzNS44OS0uODkxIDIuOTE4LTEuNjQ1IDIuOTMyQTguMDk1IDguMDk1IDAgMCAwIDQyIDM2YTggOCAwIDEgMC0xNiAwIDguMDk1IDguMDk1IDAgMCAwIDMuNTU5IDYuNjg4Yy43NTQuMDE0IDIuMzE2LTEuNiAyLjk1MS0yLjQ5YTk5LjMwNCA5OS4zMDQgMCAwIDEgMi4xNzgtMi41NjEgMjAuNzkzIDIwLjc5MyAwIDAgMSAyLjU2LTIuMTc3IDE3LjA1IDE3LjA1IDAgMCAxIDIuOTMzLTEuNjQ1QTcuOTQgNy45NCAwIDAgMSAzNiAxOHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-10"></div>
         
-        {/* Edge highlight effect - ENHANCED TO BE MORE VISIBLE */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
         <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
         <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-transparent shadow-[0_0_6px_0_rgba(168,85,247,0.7)]"></div>
         
-        {/* Corner accent decorations - NEW - MADE SMALLER */}
         <div className="absolute top-0 left-0 w-6 h-6 border-t-3 border-l-3 border-purple-500 opacity-80 rounded-tl-md"></div>
         <div className="absolute top-0 right-0 w-6 h-6 border-t-3 border-r-3 border-purple-500 opacity-80 rounded-tr-md"></div>
         <div className="absolute bottom-0 left-0 w-6 h-6 border-b-3 border-l-3 border-purple-500 opacity-80 rounded-bl-md"></div>
         <div className="absolute bottom-0 right-0 w-6 h-6 border-b-3 border-r-3 border-purple-500 opacity-80 rounded-br-md"></div>
       </div>
-      
-      {/* Main content wrapper with visible border */}
-      <div className="relative z-10 border-2 border-purple-500/30 rounded-xl overflow-hidden shadow-[0_0_24px_-5px_rgba(168,85,247,0.3)]">
-        {/* Header for compartment - REDUCED PADDING */}
+            <div className="relative z-10 border-2 border-purple-500/30 rounded-xl overflow-hidden shadow-[0_0_24px_-5px_rgba(168,85,247,0.3)]">
         <div className="relative z-10 mb-4 bg-black/50 border-b border-purple-500/50 px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">

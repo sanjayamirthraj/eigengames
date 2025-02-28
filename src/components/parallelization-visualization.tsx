@@ -406,7 +406,6 @@ const ParallelizationVisualization = ({
           </Card>
         </div>
 
-        {/* Metrics Panel - 1/4 width */}
         <div className="col-span-1">
           <Card className="glass-card overflow-hidden h-full border-0 shadow-[0_0_50px_-12px_rgba(168,85,247,0.25)] bg-gradient-to-br from-black to-zinc-900/95">
             <CardHeader className="relative z-10 border-b border-purple-800/60 bg-black/40 px-6 py-4">

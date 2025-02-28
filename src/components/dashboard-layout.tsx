@@ -9,7 +9,6 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-black">
-      {/* Header - Added backdrop blur and increased z-index */}
       <header className="bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -20,7 +19,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <line x1="17.5" y1="15" x2="9" y2="15"></line>
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-white">Ethereum Parallel Execution</h1>
+            <h1 className="text-xl font-bold text-white">Batch'd</h1>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -47,17 +46,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </header>
       
-      {/* Main Content - Increased padding-top significantly */}
       <main className="container mx-auto px-4 py-6 mt-16">
         {children}
       </main>
       
-      {/* Footer */}
       <footer className="bg-zinc-900 border-t border-zinc-800 py-4 mt-12 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-zinc-500 mb-4 md:mb-0">
-              © 2025 Ethereum Parallel Execution Dashboard Made at Eigen Games
+              © 2025 Batch'd - Made at Eigen Games
             </div>
             <div className="flex space-x-6">
               <a href="https://github.com/sanjayamirthraj/eigengames/blob/main/README.md" className="text-sm text-zinc-400 hover:text-purple-400 transition-colors">Documentation</a>

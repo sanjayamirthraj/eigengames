@@ -27,27 +27,23 @@ const BlockDetails = ({ block, onClose }: BlockDetailsProps) => {
     return null;
   }
 
-  // Format transaction hash for display
   const formatTxHash = (hash: string): string => {
     if (!hash || hash.length < 12) return hash;
     return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
   };
 
-  // Calculate estimated gas usage based on transaction count
   const calculateGasUsage = (txCount: number): number => {
     return txCount * 70000; // Approximate gas per transaction
   };
 
-  // Calculate estimated execution time
   const calculateExecutionTime = (txCount: number, isSequential: boolean): string => {
     const timeInSeconds = isSequential
-      ? txCount * 0.05 // Sequential execution
-      : Math.ceil(txCount / 3) * 0.05; // Parallel execution (assuming 3 txs in parallel)
+      ? txCount * 0.05
+      : Math.ceil(txCount / 3) * 0.05; //estimated time for parallel execution
     
     return timeInSeconds.toFixed(2);
   };
 
-  // Calculate MEV opportunity
   const calculateMEV = (txCount: number): string => {
     return (txCount * 0.005).toFixed(3);
   };

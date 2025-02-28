@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ethereum Parallel Execution Dashboard",
+  title: "Batch'd",
   description: "Visualize and optimize Ethereum transaction parallelization for block proposers",
 };
 

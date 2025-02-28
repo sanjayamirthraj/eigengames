@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 
-// Simple VisuallyHidden component for accessibility
 const VisuallyHidden = ({ children }: { children: React.ReactNode }) => (
   <span className="sr-only">{children}</span>
 );
@@ -59,7 +58,7 @@ const HeroSection = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[95vw] h-[95vh] max-h-[95vh] p-0 overflow-hidden border-0 bg-transparent">
             <VisuallyHidden>
-              <DialogTitle>Ethereum Parallel Execution Visualization</DialogTitle>
+              <DialogTitle>Batch'd Visualization Dashboard</DialogTitle>
             </VisuallyHidden>
             <div className="relative w-full h-full">
               <DialogClose className="absolute right-2 top-2 z-50 rounded-full bg-zinc-900/80 p-1.5 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2">
@@ -75,8 +74,6 @@ const HeroSection = () => {
           </DialogContent>
         </Dialog>
       </div>
-      
-      {/* Parallelization explanation */}
       <div className="mt-8 pt-8 border-t border-zinc-800 grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
         <div>
           <h3 className="text-lg font-medium text-purple-400 mb-2">How Parallel Execution Works</h3>

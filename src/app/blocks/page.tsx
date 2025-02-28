@@ -1,7 +1,7 @@
 import BlockVisualization from "@/components/block-visualization";
 
 export const metadata = {
-  title: 'Block Stream | Eigen Games',
+  title: 'Batch\'d | Eigen Games',
   description: 'Visualizing the most recent blocks with parallelization information',
 };
 
