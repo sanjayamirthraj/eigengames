@@ -2,25 +2,8 @@
 
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
-<!-- ## Table of Contents -->
-<!-- - [Introduction](#introduction)
-- [Implementation Overview](#implementation-overview)
-  - [1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain](#1-implementing-our-custom-algorithm-through-an-alternative-layer-1-alt-l1-implementation----eigenchain)
-  - [2. Custom Client Implementation](#2-custom-client-implementation)
-- [Solution](#solution)
-  - [Quantitative Throughput Analysis](#quantitative-throughput-analysis)
-- [Custom Client Implementation Details](#custom-client-implementation-details)
-  - [Core Components](#core-components)
-  - [Key Architectural Elements](#key-architectural-elements)
-    - [Transaction Tagging System](#1-transaction-tagging-system)
-    - [The ParallelPool Architecture](#2-the-parallelpool-architecture)
-    - [Batch Processing System](#3-batch-processing-system)
-    - [Enhanced API for Parallel Transaction Management](#4-enhanced-api-for-parallel-transaction-management)
-  - [Transaction Processing Flow](#transaction-processing-flow)
-- [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
-- [Performance Improvements](#performance-improvements)
-  - [Performance Monitoring](#performance-monitoring)
-- [Future Research Directions](#future-research-directions) -->
+## Table of Contents -->
+
 
 
 ## Introduction
@@ -33,9 +16,9 @@ So how do you change this?
 
 Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementation uses a state access batching algorithm to figure out which transactions can be processed simultaneously.
 
-The way one can visualize this algorithm is through the following: imagine you and your friends are working on the same GitHub repo. If everyone is working on completely different files, you can push and pull freely without merge conflicts. Otherwise, to subvert conflicts, you would have to wait for your friend to make their edits to their code. Our solution groups individuals to where they are working on completely different files -- everyone can push at the same time.
+Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks.
 
-## The Batching Algorithm: The Heart of Our Innovation
+### The Batching Algorithm: The Heart of Our Innovation
 
 The batching algorithm is the true intellectual property and "secret sauce" of our system. It's what enables us to:
 
@@ -75,13 +58,30 @@ New Throughput = Block size / (p + c/3.4)
 Assuming a total block time of 12 seconds split evenly among p = c = 6 seconds, the new throughput improves from 9.08 to 14.04 transactions per second, representing a 1.54x increase. This substantial improvement demonstrates the real-world impact of our parallel transaction processing approach.
 
 
-#### Impact on L2s and L1s
+### Impact on L2s and L1s
 
 While the impact on L1 (specifically Ethreum) and its advantages may not be immediately acted upon due to Ethereum's fixed slot times (12 s), a continuous usage of parallelizable blocks (transactions) can help in reducing the slot times. The Ethereum slot times are based off propagation and execution times. Going down on the execution time still allows to help reduce the slot times, even when propagation time cannot be reduced. 
 
 For L2s, the effects are immediately apparant. The L2 tx batches posted to DA layers like EigenDA essentially makes the L2 sequencer's transaction handling ability a limit. With parallel execution of transactions the L2 sequencer can process more transactions.
 
 In addition, Replica Nodes, Verifiers and any node that is syncing can utilize the parallel batches and ordering info to sync faster.
+
+### Actual Execution of the Custom Batching
+
+To implement/make use of the batch proposal tool (the brain!) - our first approach involves creating a custom client implementation that basically follows the directions from the tool and executes the transactions. Following the rules entails just executing transaction batches that have been asked to be executed in parallel, and executing the others in sequence. Since we result in the same state output irrespective of the client used, using the client only saves time in terms of execution for the node but does not result in an alternate implementation. This can directly be used on mainnet or any EVM compatible chain. 
+
+The second way that protocols can use our custom batching solution is through the creation of Alt L1s!
+
+### Why is an AVS required? Why concurrency penalties are bad?
+
+One of the major lines of thought around solving the sequential execution problem for the EVM has been speculative concurrency. Speculative concurrency - proposes optimistically executing transactions parallely in parallel threads. If there are collisions (common state accesses) between these transactions - they are discarded and rerun sequentially, later. 
+Surprisingly, while this approach hasn't proven beneficial in practice, the reasons behind its limitations offer valuable lessons and further highlight the utility of an AVS in this context.
+
+The reason speculative concurrency, or even an improved model(with separation of nodes) does not work well in practice - has been emphasized by Seraph et al. in their paper - ('An Empirical Study of Speculative Concurrency in Ethereum Smart Contract')[https://arxiv.org/pdf/1901.01376]:
+- "When txs are optimistically executed, conflict grows as blockchain is more crowded, generally 35% clash rate"
+- "Speculative techniques typically work well when conflicts are rare, but perform poorly when conflicts are common"
+
+Overall, penalties incurred in the form of attempting to execute parallely, detecting issues and having to queue them sequentially later ends up wasting time, which in fact makes execution slower (than a sequential approach). In other words, parallel execeution only works efficiently when batches of parallelizable transactions are pre-decided and are valid (and do not have a collision) during execution. This underlines the importance of being correct when creating parallelizable batches or trusting someone who does it for you. The AVS helps in mitigating trust here - by allowing at least one EigenLayer operator to be accountable for proposing these parallelizable blocks. 
 
 ## Integration with EigenLayer AVS
 
@@ -94,14 +94,8 @@ Our implementation integrates with EigenLayer's AVS by:
 
 The AVS integration allows anyone to benefit from parallel execution while maintaining its core security properties and restaking mechanisms. By batching transactions based on independent state accesses, our solution significantly increases the throughput capabilities.
 
-# Implementation of Custom Batching
 
-Our first approach involves creating a custom client implementation that works within the existing ecosystem through an Ethereum Improvement Proposal (EIP). This implementation introduces parallel execution capabilities through specialized transaction types. This can directly be used on mainnet or any EVM compatible chain. 
-
-The second way that protocols can use our custom batching solution is through the creation of Alt L1s!
-
-
-## Components 
+### Components 
 
 a) AVS deployed using Othentic stack
 
@@ -111,7 +105,7 @@ c) Parallel Execution Batcher Helper utilized by the AVS
 
 d) UI that fetches, and displays the most parallelizable block options (with graphics to assist with understanding)
 
-## Deployed AVS using Othentic
+### Deployed AVS using Othentic
 
 Deployed AVS contracts: 
 ```
@@ -131,7 +125,7 @@ Attester 3: 0xd3e7483D19ecbB631B65aC7D51964cF9A85e631C
 
 
 
-## Run the project locally
+### Run the project locally
 
 1. To run the project locally we first need to run the AVS (operator) services locally.
 
@@ -165,7 +159,7 @@ $ npm run dev
 ```
 
 
-## Format of Attestations posted on-chain
+### Format of Attestations posted on-chain
 
 Attestations are posted on-chain by the AVS in the following form:
 ```
@@ -200,38 +194,9 @@ the hash of which equates to string(0x653539623232363831393933366639623361613039
 
 
 
+## 1. Custom Client Implementation 
 
-
-## Why is an AVS required? Why concurrency penalties are bad?
-
-One of the major lines of thought around solving the sequential execution problem for the EVM has been speculative concurrency. Speculative concurrency - proposes optimistically executing transactions parallely in parallel threads. If there are collisions (common state accesses) between these transactions - they are discarded and rerun sequentially, later. 
-Surprisingly, while this approach hasn't proven beneficial in practice, the reasons behind its limitations offer valuable lessons and further highlight the utility of an AVS in this context.
-
-The reason speculative concurrency, or even an improved model(with separation of nodes) does not work well in practice - has been emphasized by Seraph et al. in their paper - ('An Empirical Study of Speculative Concurrency in Ethereum Smart Contract')[https://arxiv.org/pdf/1901.01376]:
-- "When txs are optimistically executed, conflict grows as blockchain is more crowded, generally 35% clash rate"
-- "Speculative techniques typically work well when conflicts are rare, but perform poorly when conflicts are common"
-
-Overall, penalties incurred in the form of attempting to execute parallely, detecting issues and having to queue them sequentially later ends up wasting time, which in fact makes execution slower (than a sequential approach). In other words, parallel execeution only works efficiently when batches of parallelizable transactions are pre-decided and are valid (and do not have a collision) during execution. This underlines the importance of being correct when creating parallelizable batches or trusting someone who does it for you. The AVS helps in mitigating trust here - by allowing at least one EigenLayer operator to be accountable for proposing these parallelizable blocks. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 1. Custom Client Implementation 
-
-## Custom Client Implementation Details
+### Custom Client Implementation Details
 
 Our custom client, which is currently in work, introduces parallel transaction processing. The technical implementation includes:
 
