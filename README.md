@@ -2,6 +2,12 @@
 
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
+ - Othentic AVS:  (`/AVS/Othentic-AVS`)
+ - Frontend: (`/src`)
+ - Blueprint: (`/blueprint/parallel-exec-eigenlayer`)
+ - Parallel Exec Helper: (`/AVS/parallel-exec-helper`)
+ - Geth Implementation: (`parallelizable-client-go-ethereum`)
+
 ## Table of Contents
 
 - [Introduction](#introduction)
