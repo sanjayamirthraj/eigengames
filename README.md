@@ -9,7 +9,7 @@
 - [The Batching Algorithm: The Heart of Our Innovation](#the-batching-algorithm-the-heart-of-our-innovation)
   - [Quantitative Throughput Analysis: What solving this problem could mean?](#quantitative-throughput-analysis-what-solving-this-problem-could-mean)
   - [Impact on L2s and L1s](#impact-on-l2s-and-l1s)
-  -[Implementation of Custom Batching](#Actual Execution of the Custom Batching)
+  -[Implementation of Custom Batching](#actual-execution-of-the-custom-batching)
 - [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
   - [Components](#components)
   - [Deployed AVS using Othentic](#deployed-avs-using-othentic)
