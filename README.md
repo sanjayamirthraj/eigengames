@@ -65,7 +65,7 @@ The blocks formed right now depends on the degree of parallelizability of the co
 We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
 
 
-![UI 6](/screenshots/wireframe.pngg)
+![UI 6](/screenshots/wireframe.png)
 
 ### Quantitative Throughput Analysis: What solving this problem could mean?
 Our perspective:
