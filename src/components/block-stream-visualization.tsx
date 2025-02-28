@@ -66,16 +66,14 @@ const BlockStreamVisualization = ({
         timestamp: new Date().toISOString()
       });
       
-      // Simple GET request - as direct as possible
       const response = await fetch("http://localhost:3000/blocks", {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
-        cache: 'no-store', // Ensure we don't use cached data
-        mode: 'cors', // Explicitly set CORS mode
+        cache: 'no-store',
+        mode: 'cors',
       }).catch(err => {
-        // This catches network errors like server not running
         console.error("Network error connecting to server:", err);
         throw new Error("Cannot connect to the server at http://localhost:3000/blocks. Ensure the server is running.");
       });
@@ -84,7 +82,6 @@ const BlockStreamVisualization = ({
         throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
       }
       
-      // Parse the JSON response
       const data = await response.json();
       console.log("Raw API response:", data);
       
@@ -92,40 +89,31 @@ const BlockStreamVisualization = ({
         throw new Error("Invalid data format from API: Expected { blocks: [...] }");
       }
       
-      // Convert API blocks to our format - sorting to ensure proper organization
-      // Put parallelizable blocks first, then sequential
       const sortedBlocks = [...data.blocks].sort((a, b) => {
-        // Sort by type (parallelizable first)
         if (a.type === 'parallelizable' && b.type === 'sequential') return -1;
         if (a.type === 'sequential' && b.type === 'parallelizable') return 1;
         
-        // Then by groupId
         return a.groupId - b.groupId;
       });
       
-      // Save previous transaction counts before updating
       const newPreviousBlocks: {[key: string]: number} = {};
       const newFlashingBlocks: {[key: string]: boolean} = {};
-      
-      // Map to our format
       const formattedBlocks: BlockBatch[] = sortedBlocks.map(block => {
         const isSequential = block.type === 'sequential';
         const txCount = block.transactions.length;
         const blockId = `#${block.groupId}`;
         
-        // Check if this block existed before and if the transaction count changed
         if (previousBlocks[blockId] !== undefined && previousBlocks[blockId] !== txCount) {
           console.log(`Transaction count changed for block ${blockId}: ${previousBlocks[blockId]} → ${txCount}`);
           newFlashingBlocks[blockId] = true;
         }
         
-        // Store the current transaction count for next comparison
         newPreviousBlocks[blockId] = txCount;
 
         return {
           id: blockId,
           transactions: txCount,
-          totalFees: (txCount * 0.003).toFixed(3), // Calculate fees based on tx count and type
+            totalFees: (txCount * 0.003).toFixed(3), 
           expectedMEV: (Math.random() * 0.3 + 0.05).toFixed(3),
           isSequential: isSequential,
           sequentialCount: isSequential ? txCount : 0,
@@ -162,15 +150,13 @@ const BlockStreamVisualization = ({
     }
   };
 
-  // Initial fetch on component mount and setup auto-refresh
   useEffect(() => {
     fetchBlocks();
     
-    // Auto-start live updates if autoScroll is enabled
     if (autoScroll) {
       const interval = setInterval(() => {
         fetchBlocks();
-      }, 5000); // Fetch every 5 seconds
+      }, 5000); 
       
       setSimulationInterval(interval);
       setIsSimulating(true);
@@ -183,16 +169,12 @@ const BlockStreamVisualization = ({
       }
     };
   }, []);
-
-  // Auto-scroll to the end when new blocks arrive
   useEffect(() => {
     if (autoScroll && scrollContainerRef.current && blocks.length > 0) {
       const scrollContainer = scrollContainerRef.current;
-      // Smooth scroll to the end after a small delay to ensure new blocks rendered
       setTimeout(() => {
-        // Scroll to the rightmost end to show the newest blocks
         scrollContainer.scrollTo({
-          left: scrollContainer.scrollWidth, // Scroll to rightmost end, not the start
+          left: scrollContainer.scrollWidth,
           behavior: 'smooth'
         });
       }, 100);
