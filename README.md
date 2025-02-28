@@ -1,5 +1,7 @@
 # Implementing Parallel Transaction Processing on using EigenLayer AVS
 
+![UI 2](/screenshots/ui_2.png)
+
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
  - Othentic AVS:  (`/AVS/Othentic-AVS`)
@@ -7,6 +9,8 @@
  - Blueprint: (`/blueprint/parallel-exec-eigenlayer`)
  - Parallel Exec Helper: (`/AVS/parallel-exec-helper`)
  - Geth Implementation: (`parallelizable-client-go-ethereum`)
+
+![UI 1](/screenshots/ui_1.png)
 
 ## Table of Contents
 
@@ -42,6 +46,8 @@ Our solution to the parallel transaction execution challenge focuses on intellig
 The way one can visualize this algorithm is through the following: imagine you and your friends are working on the same GitHub repo. If everyone is working on completely different files, you can push and pull freely without merge conflicts. Otherwise, to subvert conflicts, you would have to wait for your friend to make their edits to their code. Our solution groups individuals to where they are working on completely different files -- everyone can push at the same time.
 
 ### The Batching Algorithm: The Heart of Our Innovation
+
+![UI 5](/screenshots/ui_5.png)
 
 The batching algorithm is the true intellectual property and "secret sauce" of our system. It's what enables us to:
 
@@ -184,6 +190,9 @@ Navigate to the Attestation center contract to check attestations being posted e
 $ cd ../../
 $ npm run dev
 ```
+
+![UI 4](/screenshots/ui_4.png)
+![UI 5](/screenshots/ui_5.png)
 
 
 ### Format of Attestations posted on-chain
