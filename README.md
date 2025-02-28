@@ -1,9 +1,5 @@
 ![logo](/screenshots/logo.png)
 
-# Batch'd
-
-
-
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
  - Othentic AVS:  (`/AVS/Othentic-AVS`)
