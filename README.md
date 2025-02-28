@@ -35,13 +35,9 @@ Our solution to the parallel transaction execution challenge focuses on intellig
 
 Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementaiton uses a state access batching algorithm to figure out which transactions can be processed simultaneously and which ones need to wait. It's similar to how web servers handle multiple requests concurrently while making sure related operations still happen in the right sequence.
 
-Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks. We've developed two possible implementation paths:
-
-We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
+Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks.
 
 ## The Batching Algorithm: The Heart of Our Innovation
-
-What makes our solution truly groundbreaking is our custom batching algorithm - the most challenging and intellectually demanding component of the entire system. This algorithm represents the culmination of cutting-edge research in blockchain parallelization that has been at the forefront of Ethereum and EVM chain discussions in recent years.
 
 The batching algorithm is the true intellectual property and "secret sauce" of our system. It's what enables us to:
 
@@ -49,11 +45,11 @@ The batching algorithm is the true intellectual property and "secret sauce" of o
 2. **Identify independent transaction groups** that can safely run in parallel
 3. **Maximize parallelization opportunities** without compromising blockchain consistency
 
-While Ethereum core developers and researchers have been exploring parallel execution for a while now, our implementation brings this concept to practical reality. 
+Using EigenLayer AVS, we have built an approach to parallelize the EVM. Our implementation intelligently batches transactions from the mempool into parallelizable batches on the basis of their independent state accesses. The AVS looks at the current Ethereum mempool, finds state/slot/storage accesses for each of these pending transactions and efficiently creates maximally parallelizable batches - meaning the maximum number of transactions that can be fit into parallelization batches/baskets. (Transactions that do not have collisions in their state accesses can be grouped together in parallelizable batches). These batches (and could be multiple) are then put together in a block form and proposed for the sequencer/proposer to include.
 
-The actual theoretical implementation once the algorithmic brains into real world chains becomes relatively straightforward. The hard part is the batching logic - determining which transactions can safely execute in parallel. After that, the mechanical aspects of implementing the execution environment are theoretically trivial; we have proposed and began developing an execution client and proposed an easy implementation of how anyone can use our product to develop custom Alt-L1s later in this README. 
+The blocks formed right now depends on the degree of parallelizability of the constituent transactions. But in the future, factors like tx fees and potentail MEV can be put together in an equation to find the most optimal reward bearing blocks for the proposer/sequencer. But, right now we are optimizing for maximal parallelizability.
 
-Our batching algorithm's efficiency is what enables the significant throughput improvements demonstrated in our analysis, and it's what positions our solution as a transformative technology for EVM-compatible blockchains. How much faster can our batching make ETH L1?
+We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
 
 ### Quantitative Throughput Analysis: What solving this problem could mean?
 Our perspective:
