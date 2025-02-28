@@ -1,4 +1,4 @@
-# Implementing Parallel Transaction Processing on using EigenLayer AVS
+# Batch'd
 
 
 
@@ -63,6 +63,9 @@ Using EigenLayer AVS, we have built an approach to parallelize the EVM. Our impl
 The blocks formed right now depends on the degree of parallelizability of the constituent transactions. But in the future, factors like tx fees and potentail MEV can be put together in an equation to find the most optimal reward bearing blocks for the proposer/sequencer. But, right now we are optimizing for maximal parallelizability.
 
 We have the brains of the operation with our custom algorithms, and we look to speed up ETH and Layer 2s and really -- anyone who wants to use our product!
+
+
+![UI 6](/screenshots/wireframe.pngg)
 
 ### Quantitative Throughput Analysis: What solving this problem could mean?
 Our perspective:
