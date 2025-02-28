@@ -2,26 +2,26 @@
 
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
 
-<!-- ## Table of Contents -->
-<!-- - [Introduction](#introduction)
-- [Implementation Overview](#implementation-overview)
-  - [1. Implementing our custom algorithm through an Alternative Layer 1 (Alt-L1) Implementation -- EIGENChain](#1-implementing-our-custom-algorithm-through-an-alternative-layer-1-alt-l1-implementation----eigenchain)
-  - [2. Custom Client Implementation](#2-custom-client-implementation)
+## Table of Contents
+
+- [Introduction](#introduction)
 - [Solution](#solution)
-  - [Quantitative Throughput Analysis](#quantitative-throughput-analysis)
+- [The Batching Algorithm: The Heart of Our Innovation](#the-batching-algorithm-the-heart-of-our-innovation)
+  - [Quantitative Throughput Analysis: What solving this problem could mean?](#quantitative-throughput-analysis-what-solving-this-problem-could-mean)
+  - [Impact on L2s and L1s](#impact-on-l2s-and-l1s)
+- [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
+- [Implementation of Custom Batching](#implementation-of-custom-batching)
+  - [Components](#components)
+  - [Deployed AVS using Othentic](#deployed-avs-using-othentic)
+  - [Run the project locally](#run-the-project-locally)
+  - [Format of Attestations posted on-chain](#format-of-attestations-posted-on-chain)
+  - [Why is an AVS required? Why concurrency penalties are bad?](#why-is-an-avs-required-why-concurrency-penalties-are-bad)
 - [Custom Client Implementation Details](#custom-client-implementation-details)
   - [Core Components](#core-components)
   - [Key Architectural Elements](#key-architectural-elements)
-    - [Transaction Tagging System](#1-transaction-tagging-system)
-    - [The ParallelPool Architecture](#2-the-parallelpool-architecture)
-    - [Batch Processing System](#3-batch-processing-system)
-    - [Enhanced API for Parallel Transaction Management](#4-enhanced-api-for-parallel-transaction-management)
   - [Transaction Processing Flow](#transaction-processing-flow)
-- [Integration with EigenLayer AVS](#integration-with-eigenlayer-avs)
-- [Performance Improvements](#performance-improvements)
-  - [Performance Monitoring](#performance-monitoring)
-- [Future Research Directions](#future-research-directions) -->
-
+- [An alternative approach](#an-alternative-approach)
+  - [Implementing through an Alternative Layer 1 (Alt-L1)](#implementing-our-custom-algorithm-through-an-alternative-layer-1-alt-l1-implementation----eigenchain)
 
 ## Introduction
 
