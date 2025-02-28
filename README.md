@@ -144,6 +144,10 @@ Attester 3: 0xd3e7483D19ecbB631B65aC7D51964cF9A85e631C
 
 ### Run the project locally
 
+
+![Othentic Demo](/screenshots/othentic%201.png)
+![Parallel Groups](/screenshots/parallel%20groups.png)
+
 1. To run the project locally we first need to run the AVS (operator) services locally.
 
 If you do not know what operators are - or are yet to deploy/register them with the project, please follow the steps listed here: https://docs.othentic.xyz/main/avs-framework/quick-start (upto step 8: Registering operator to AVS)
