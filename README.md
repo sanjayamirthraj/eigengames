@@ -31,11 +31,9 @@ So how do you change this?
 
 ## Solution
 
-Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. By identifying which transactions can safely be executed in parallel without state conflicts, we can significantly increase overall throughput while preserving blockchain consistency.
+Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementation uses a state access batching algorithm to figure out which transactions can be processed simultaneously.
 
-Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementaiton uses a state access batching algorithm to figure out which transactions can be processed simultaneously and which ones need to wait. It's similar to how web servers handle multiple requests concurrently while making sure related operations still happen in the right sequence.
-
-Our solution solves parallel execution by intelligently batching transactions from the mempool based on independent state accesses, allowing us to propose more efficient blocks.
+The way one can visualize this algorithm is through the following: imagine you and your friends are working on the same GitHub repo. If everyone is working on completely different files, you can push and pull freely without merge conflicts. Otherwise, to subvert conflicts, you would have to wait for your friend to make their edits to their code. Our solution groups individuals to where they are working on completely different files -- everyone can push at the same time.
 
 ## The Batching Algorithm: The Heart of Our Innovation
 
