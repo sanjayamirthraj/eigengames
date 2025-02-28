@@ -6,6 +6,13 @@ A simple AVS blueprint that fetches block data from an API, hashes the concatena
 *** Important ***
 While the blueprint hasn't been renamed to parallel-exec, the code has been updated to utilize the parallel-exec-helper to form block responses (with batches), hash and submit them to the contract
 
+
+## Screenshots
+
+![Tangle 1](/screenshots/tangle1.png)
+![Tangle 2](/screenshots/tangle2.png)
+
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:

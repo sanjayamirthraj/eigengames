@@ -1,6 +1,17 @@
 # Implementing Parallel Transaction Processing on using EigenLayer AVS
 
+
+
 ## Parallel Transaction Pool for EigenLayer AVS: Enabling Concurrent Transaction Processing
+
+ - Othentic AVS:  (`/AVS/Othentic-AVS`)
+ - Frontend: (`/src`)
+ - Blueprint: (`/blueprint/parallel-exec-eigenlayer`)
+ - Parallel Exec Helper: (`/AVS/parallel-exec-helper`)
+ - Geth Implementation: (`parallelizable-client-go-ethereum`)
+
+![UI 2](/screenshots/ui_2.png)
+![UI 1](/screenshots/ui_1.png)
 
 ## Table of Contents
 
@@ -34,6 +45,10 @@ So how do you change this?
 Our solution to the parallel transaction execution challenge focuses on intelligently batching transactions from the mempool based on independent state accesses. Using Eigenlayer AVS, we have created a new way to parallelize the EVM. Our implementation uses a state access batching algorithm to figure out which transactions can be processed simultaneously.
 
 The way one can visualize this algorithm is through the following: imagine you and your friends are working on the same GitHub repo. If everyone is working on completely different files, you can push and pull freely without merge conflicts. Otherwise, to subvert conflicts, you would have to wait for your friend to make their edits to their code. Our solution groups individuals to where they are working on completely different files -- everyone can push at the same time.
+
+
+![UI 5](/screenshots/ui_5.png)
+
 
 ### The Batching Algorithm: The Heart of Our Innovation
 
@@ -144,6 +159,10 @@ Attester 3: 0xd3e7483D19ecbB631B65aC7D51964cF9A85e631C
 
 ### Run the project locally
 
+
+![Othentic Demo](/screenshots/othentic%201.png)
+![Parallel Groups](/screenshots/parallel%20groups.png)
+
 1. To run the project locally we first need to run the AVS (operator) services locally.
 
 If you do not know what operators are - or are yet to deploy/register them with the project, please follow the steps listed here: https://docs.othentic.xyz/main/avs-framework/quick-start (upto step 8: Registering operator to AVS)
@@ -174,6 +193,9 @@ Navigate to the Attestation center contract to check attestations being posted e
 $ cd ../../
 $ npm run dev
 ```
+
+![UI 4](/screenshots/ui_3.png)
+![UI 5](/screenshots/ui_4.png)
 
 
 ### Format of Attestations posted on-chain
