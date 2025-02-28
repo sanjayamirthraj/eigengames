@@ -133,7 +133,6 @@ const BlockStreamVisualization = ({
         };
       });
       
-      // Log if any blocks will flash
       if (Object.keys(newFlashingBlocks).length > 0) {
         console.log("Blocks that will flash:", newFlashingBlocks);
       }
@@ -142,15 +141,12 @@ const BlockStreamVisualization = ({
       setPreviousBlocks(newPreviousBlocks);
       setFlashingBlocks(newFlashingBlocks);
       setLastUpdated(new Date());
-      // Generate new hash for visual block effect
       setBlockHash((() => {
           return `Sanjay Amirthraj and Souradeep Das`;
         })());
-      // Update other blockchain metadata
       setBlockNonce(Math.floor(Math.random() * 1000000));
       setBlockHeight(prev => prev + 1);
       
-      // Reset flashing blocks after animation duration
       if (Object.keys(newFlashingBlocks).length > 0) {
         setTimeout(() => {
           console.log("Resetting flashing blocks state");
@@ -212,23 +208,16 @@ const BlockStreamVisualization = ({
     }
     if (onBlockSelect) onBlockSelect(block);
   };
-
-  // Calculate number of parallelizable vs sequential transactions
   const getParallelizableTxCount = (block: BlockBatch) => {
     if (block.isSequential) return 0;
     return block.transactions - (block.sequentialCount || 0);
   };
 
-  // Calculate color based on transaction percentage - moved outside render for reusability
   const getColorStyles = (block: BlockBatch, index: number) => {
-    // Always recalculate the total transactions from the current blocks
     const totalTxs = blocks.reduce((acc, curr) => acc + curr.transactions, 0);
-    // Calculate percentage of this block's transactions
     const txPercentage = totalTxs > 0 ? Math.round((block.transactions / totalTxs) * 100) : 0;
     
-    // Background color logic
     const getBackgroundColor = (percent: number, isSequential: boolean) => {
-      // For sequential blocks - use orange palette
       if (isSequential) {
         if (percent >= 40) return "bg-orange-800/50"; 
         if (percent >= 30) return "bg-orange-700/45";
@@ -289,7 +278,6 @@ const BlockStreamVisualization = ({
     }
   };
 
-  // For debugging, add a function to manually trigger a flash on all blocks
   const triggerTestFlash = () => {
     const testFlashingBlocks: {[key: string]: boolean} = {};
     blocks.forEach(block => {
@@ -370,7 +358,6 @@ const BlockStreamVisualization = ({
               </div>
             </div>
 
-            {/* Block metadata header with Public Good Reward metrics - SMALLER PADDING AND TEXT */}
             <div className="relative z-10 bg-black/60 py-2 px-4 border-b border-purple-800/30">
               <div className="grid grid-cols-3 gap-3">
                 <div className="px-2 py-1.5 bg-purple-900/20 rounded-lg border border-purple-800/30">
@@ -378,18 +365,11 @@ const BlockStreamVisualization = ({
                   <div className="text-xs font-mono text-white font-medium flex items-center">
                     <span className="text-emerald-400 mr-1">+</span>
                     {(() => {
-                      // Calculate total transactions
                       const totalTransactions = blocks.reduce((acc, block) => acc + block.transactions, 0);
-                      
-                      // Calculate parallelizable transactions (non-sequential)
                       const parallelizableTxCount = blocks.reduce((acc, block) => 
                         acc + (block.isSequential ? 0 : block.transactions - (block.sequentialCount || 0)), 0);
-                      
-                      // Calculate total transaction fees
                       const totalTransactionFees = blocks.reduce((acc, block) => 
                         acc + parseFloat(block.totalFees), 0);
-                      
-                      // Calculate public good reward using the formula
                       const publicGoodReward = totalTransactions > 0 
                         ? ((parallelizableTxCount / totalTransactions) * (totalTransactionFees / 10)).toFixed(3)
                         : "0.000";
